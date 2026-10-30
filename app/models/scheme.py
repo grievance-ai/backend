@@ -19,6 +19,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    LargeBinary,
     String,
     Text,
     func,
@@ -26,7 +27,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import GUID, Base, TimestampMixin
-from app.models.enums import SchemeLevel
+from app.models.enums import SchemeLevel, SchemeReviewStatus
 
 if TYPE_CHECKING:
     from app.models.geography import Department
@@ -64,6 +65,18 @@ class Scheme(Base, TimestampMixin):
     keywords: Mapped[list[str]] = mapped_column(JSON, default=list)  # en + pa match terms
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     last_verified_on: Mapped[date | None] = mapped_column(Date, default=None)  # checked vs source
+
+    # Where the entry came from. The text may be reused from official portals
+    # (e.g. myScheme) only with the source prominently acknowledged.
+    source_name: Mapped[str | None] = mapped_column(String(120), default=None)
+    source_url: Mapped[str | None] = mapped_column(String(500), default=None)
+    # verified = checked by a person against the official source; needs_review =
+    # imported or changed upstream and not checked yet.
+    review_status: Mapped[str] = mapped_column(
+        String(20),
+        default=SchemeReviewStatus.needs_review.value,
+        server_default=SchemeReviewStatus.needs_review.value,
+    )
     updated_by_id: Mapped[uuid.UUID | None] = mapped_column(
         GUID(), ForeignKey("users.id", ondelete="SET NULL"), default=None
     )
@@ -118,3 +131,24 @@ class SchemeInterest(Base):
     scheme: Mapped[Scheme] = relationship()
 
     __table_args__ = (Index("ix_scheme_interests_created_at", "created_at"),)
+
+
+class SchemeEmbedding(Base):
+    """One meaning vector per scheme, used to shortlist schemes for a question.
+
+    ``content_hash`` is the hash of the text that was embedded, so unchanged
+    schemes are not sent to the provider again. ``model`` names the vector space
+    (provider model + size); vectors from another model are ignored.
+    """
+
+    __tablename__ = "scheme_embeddings"
+
+    scheme_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("schemes.id", ondelete="CASCADE"), primary_key=True
+    )
+    model: Mapped[str] = mapped_column(String(100))
+    content_hash: Mapped[str] = mapped_column(String(64))
+    vector: Mapped[bytes] = mapped_column(LargeBinary)  # float32, little-endian
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )

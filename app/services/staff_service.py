@@ -34,7 +34,7 @@ from app.models.enums import (
     StaffScope,
     UnansweredStatus,
 )
-from app.models.geography import District
+from app.models.geography import Department, District
 from app.models.grievance import (
     Grievance,
     GrievanceCategory,
@@ -49,10 +49,12 @@ from app.schemas.grievance import NamedOut
 from app.schemas.staff import (
     ActivityOut,
     CitizenContactOut,
+    ComparisonOut,
     CountOut,
     DailyOut,
     NoteIn,
     OverviewOut,
+    PeriodPairOut,
     StaffEventOut,
     StaffGrievanceList,
     StaffGrievanceOut,
@@ -62,6 +64,7 @@ from app.schemas.staff import (
     StatusChangeIn,
     TotalsOut,
     TranscriptMessageOut,
+    TrendDayOut,
     UnansweredOut,
 )
 
@@ -239,6 +242,7 @@ async def list_queue(
     *,
     status: str | None = None,
     district_code: str | None = None,
+    department_code: str | None = None,
     query: str | None = None,
     limit: int = 50,
     offset: int = 0,
@@ -251,6 +255,12 @@ async def list_queue(
         filters.append(
             Grievance.district_id.in_(select(District.id).where(District.code == district_code))
         )
+    if department_code:
+        filters.append(
+            Grievance.department_id.in_(
+                select(Department.id).where(Department.code == department_code)
+            )
+        )
     if query and query.strip():
         needle = f"%{query.strip()}%"
         filters.append(or_(Grievance.reference_no.like(needle), Grievance.summary.like(needle)))
@@ -259,6 +269,18 @@ async def list_queue(
         select(Grievance.status, func.count()).where(*filters).group_by(Grievance.status)
     )
     counts = {str(k): int(v) for k, v in count_rows.all()}
+    overdue_count = int(
+        await db.scalar(
+            select(func.count())
+            .select_from(Grievance)
+            .where(
+                *filters,
+                Grievance.status.in_([s.value for s in OPEN_STATUSES]),
+                Grievance.due_at < now,
+            )
+        )
+        or 0
+    )
 
     if status == "open":
         filters.append(Grievance.status.in_([s.value for s in OPEN_STATUSES]))
@@ -289,7 +311,28 @@ async def list_queue(
         items=[_row(g, now) for g in rows],
         total=total,
         status_counts=counts,
+        overdue_count=overdue_count,
     )
+
+
+async def departments(db: AsyncSession, user: User) -> list[NamedOut]:
+    """Departments grievances are routed to (for the queue filter). A staff member
+    tied to one department only gets that one."""
+    scope = await scope_for(db, user)
+    stmt = (
+        select(Department)
+        .where(
+            Department.id.in_(
+                select(GrievanceCategory.department_id).where(
+                    GrievanceCategory.department_id.is_not(None)
+                )
+            )
+        )
+        .order_by(Department.name_en)
+    )
+    if scope.profile is not None and scope.profile.department_id is not None:
+        stmt = stmt.where(Department.id == scope.profile.department_id)
+    return [NamedOut.model_validate(d) for d in await db.scalars(stmt)]
 
 
 # --- one grievance -------------------------------------------------------------------------
@@ -518,13 +561,104 @@ def _counts(rows: Any) -> list[CountOut]:
     ]
 
 
-async def overview(db: AsyncSession, user: User, *, days: int = 30) -> OverviewOut:
+async def _period_figures(
+    db: AsyncSession, in_scope: list[ColumnElement[bool]], *, now: dt.datetime, days: int
+) -> tuple[ComparisonOut, list[TrendDayOut]]:
+    """This period vs the one before it, and a day-by-day trend for this period.
+
+    A grievance counts as done (resolved) when it was resolved or closed; it became
+    overdue on its due date if it was still not done by then."""
+    since = now - dt.timedelta(days=days)
+    before = since - dt.timedelta(days=days)
+    done_at = func.coalesce(Grievance.resolved_at, Grievance.closed_at)
+    rows = (
+        await db.execute(
+            select(Grievance.submitted_at, done_at, Grievance.due_at).where(
+                *in_scope,
+                or_(
+                    Grievance.submitted_at >= before,
+                    done_at >= before,
+                    Grievance.due_at >= before,
+                ),
+            )
+        )
+    ).all()
+
+    first = now.date() - dt.timedelta(days=days - 1)
+    trend = {first + dt.timedelta(days=i): [0, 0, 0] for i in range(days)}
+    registered = [0, 0]
+    resolved = [0, 0]
+    overdue = [0, 0]
+    durations: tuple[list[float], list[float]] = ([], [])
+
+    def bucket(at: dt.datetime) -> int | None:
+        if at >= since:
+            return 0
+        if at >= before:
+            return 1
+        return None
+
+    for submitted, done, due in rows:
+        submitted, done, due = _utc(submitted), _utc(done), _utc(due)
+        if submitted and (b := bucket(submitted)) is not None:
+            registered[b] += 1
+            if b == 0 and submitted.date() in trend:
+                trend[submitted.date()][0] += 1
+        # No "done <= now" check: MySQL rounds to the second, so a grievance closed a
+        # moment ago can look a fraction of a second in the future.
+        if done and (b := bucket(done)) is not None:
+            resolved[b] += 1
+            if submitted:
+                durations[b].append((done - submitted).total_seconds() / 86400)
+            if b == 0 and done.date() in trend:
+                trend[done.date()][1] += 1
+        if due and due <= now and (done is None or done > due) and (b := bucket(due)) is not None:
+            overdue[b] += 1
+            if b == 0 and due.date() in trend:
+                trend[due.date()][2] += 1
+
+    def avg(values: list[float]) -> float:
+        return round(sum(values) / len(values), 1) if values else 0.0
+
+    def pair(values: list[int] | tuple[float, float]) -> PeriodPairOut:
+        return PeriodPairOut(current=values[0], previous=values[1])
+
+    comparison = ComparisonOut(
+        registered=pair(registered),
+        resolved=pair(resolved),
+        overdue=pair(overdue),
+        avg_resolution_days=pair((avg(durations[0]), avg(durations[1]))),
+    )
+    return comparison, [
+        TrendDayOut(date=day, new=n, resolved=r, overdue=o) for day, (n, r, o) in trend.items()
+    ]
+
+
+async def overview(
+    db: AsyncSession,
+    user: User,
+    *,
+    days: int = 30,
+    district_code: str | None = None,
+    department_code: str | None = None,
+) -> OverviewOut:
     if user.role not in OVERVIEW_ROLES:
         raise APIError(["authz.forbidden"], 403)
     scope = await scope_for(db, user)
     now = dt.datetime.now(dt.UTC)
     since = now - dt.timedelta(days=days)
-    in_scope = scope.grievance
+    in_scope = list(scope.grievance)
+    # Optional narrowing within the caller's jurisdiction (never wider than it).
+    if district_code:
+        in_scope.append(
+            Grievance.district_id.in_(select(District.id).where(District.code == district_code))
+        )
+    if department_code:
+        in_scope.append(
+            Grievance.department_id.in_(
+                select(Department.id).where(Department.code == department_code)
+            )
+        )
     open_values = [s.value for s in OPEN_STATUSES]
 
     by_status = {
@@ -705,8 +839,35 @@ async def overview(db: AsyncSession, user: User, *, days: int = 30) -> OverviewO
         for h, ref in events
     ]
 
+    comparison, trend = await _period_figures(db, in_scope, now=now, days=days)
+    by_department = _counts(
+        (
+            await db.execute(
+                select(Department.code, Department.name_en, Department.name_pa, func.count())
+                .join(Grievance, Grievance.department_id == Department.id)
+                .where(*in_scope)
+                .group_by(Department.id)
+                .order_by(func.count().desc())
+            )
+        ).all()
+    )
+    by_priority = {
+        str(k): int(v)
+        for k, v in (
+            await db.execute(
+                select(Grievance.priority, func.count())
+                .where(*in_scope)
+                .group_by(Grievance.priority)
+            )
+        ).all()
+    }
+
     return OverviewOut(
         days=days,
+        comparison=comparison,
+        trend=trend,
+        by_department=by_department,
+        by_priority=by_priority,
         totals=TotalsOut(
             grievances=total,
             open=sum(by_status.get(s, 0) for s in open_values),

@@ -42,6 +42,7 @@ class StaffGrievanceList(BaseModel):
     items: list[StaffGrievanceRow]
     total: int  # matching the filters
     status_counts: dict[str, int]  # whole jurisdiction, ignoring the status filter
+    overdue_count: int = 0  # open and past due, same filters as status_counts
 
 
 class CitizenContactOut(BaseModel):
@@ -146,9 +147,34 @@ class ActivityOut(BaseModel):
     created_at: dt.datetime
 
 
+class PeriodPairOut(BaseModel):
+    """A number for the selected period and for the period of the same length before it."""
+
+    current: float
+    previous: float
+
+
+class ComparisonOut(BaseModel):
+    registered: PeriodPairOut  # grievances registered
+    resolved: PeriodPairOut  # resolved or closed
+    overdue: PeriodPairOut  # became overdue (due date passed while still open)
+    avg_resolution_days: PeriodPairOut  # submitted -> resolved/closed, for those done in the period
+
+
+class TrendDayOut(BaseModel):
+    date: dt.date
+    new: int
+    resolved: int
+    overdue: int
+
+
 class OverviewOut(BaseModel):
     days: int
     totals: TotalsOut
+    comparison: ComparisonOut
+    trend: list[TrendDayOut]  # one row per day of the selected period
+    by_department: list[CountOut]
+    by_priority: dict[str, int]
     by_status: dict[str, int]
     by_category: list[CountOut]
     by_district: list[CountOut]

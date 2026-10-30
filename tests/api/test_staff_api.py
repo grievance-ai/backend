@@ -266,3 +266,66 @@ async def test_district_admin_overview_is_scoped(db: AsyncSession, client: Async
     await _staff(db, client, role="admin", scope_level="district", district="LDH")
     data = (await client.get(f"{STAFF}/overview")).json()["data"]
     assert {r["code"] for r in data["by_district"]} <= {"LDH"}
+
+
+async def test_queue_filters_by_department_and_counts_overdue(
+    db: AsyncSession, client: AsyncClient
+) -> None:
+    citizen = await _citizen(client)
+    water = await _file(client, citizen, district_code="BTI")
+    power = await _file(
+        client, citizen, district_code="BTI", category_code="ELECTRICITY", subcategory_code=None
+    )
+    await _staff(db, client, role="admin", scope_level="district", district="BTI")
+
+    queue = (await client.get(f"{STAFF}/grievances", params={"department": "PB_WSS"})).json()
+    refs = [g["reference_no"] for g in queue["data"]["items"]]
+    assert water in refs and power not in refs
+    assert queue["data"]["overdue_count"] >= 0
+
+    codes = [d["code"] for d in (await client.get(f"{STAFF}/departments")).json()["data"]]
+    assert "PB_WSS" in codes and "PSPCL" in codes
+    assert "AGRICULTURE" not in codes  # scheme ministries are not grievance departments
+
+    # An officer tied to one department only gets that one.
+    await _staff(
+        db, client, role="officer", scope_level="district", district="BTI", department="PB_WSS"
+    )
+    codes = [d["code"] for d in (await client.get(f"{STAFF}/departments")).json()["data"]]
+    assert codes == ["PB_WSS"]
+
+
+async def test_overview_trend_comparison_and_filters(db: AsyncSession, client: AsyncClient) -> None:
+    # The test database is shared and never reset: compare before and after.
+    params: dict[str, str | int] = {"days": 7, "district": "KPT"}
+    water: dict[str, str | int] = {**params, "department": "PB_WSS"}
+    await _staff(db, client, role="admin", scope_level="state")
+    before = (await client.get(f"{STAFF}/overview", params=params)).json()["data"]
+    before_water = (await client.get(f"{STAFF}/overview", params=water)).json()["data"]
+
+    citizen = await _citizen(client)
+    ref = await _file(client, citizen, district_code="KPT")
+    await _file(
+        client, citizen, district_code="KPT", category_code="ELECTRICITY", subcategory_code=None
+    )
+    headers = await _staff(db, client, role="admin", scope_level="state")
+    resp = await client.post(
+        f"{STAFF}/grievances/{ref}/status",
+        json={"status": "closed", "remark": "Fixed.", "resolution_outcome": "resolved_fully"},
+        headers=headers,
+    )
+    assert resp.status_code == 200, resp.text
+
+    after = (await client.get(f"{STAFF}/overview", params=params)).json()["data"]
+    assert len(after["trend"]) == 7
+    assert after["trend"][-1]["new"] == before["trend"][-1]["new"] + 2
+    assert after["trend"][-1]["resolved"] == before["trend"][-1]["resolved"] + 1
+    reg, res = after["comparison"]["registered"], after["comparison"]["resolved"]
+    assert reg["current"] == before["comparison"]["registered"]["current"] + 2
+    assert res["current"] == before["comparison"]["resolved"]["current"] + 1
+    assert {r["code"] for r in after["by_district"]} == {"KPT"}
+
+    after_water = (await client.get(f"{STAFF}/overview", params=water)).json()["data"]
+    registered = after_water["comparison"]["registered"]["current"]
+    assert registered == before_water["comparison"]["registered"]["current"] + 1
+    assert [r["code"] for r in after_water["by_department"]] == ["PB_WSS"]

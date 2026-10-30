@@ -108,6 +108,21 @@ def _mock_tts() -> None:
 
 
 @pytest.fixture(autouse=True)
+def _mock_embeddings() -> None:
+    """Never call a real embedding service in tests."""
+    settings.embedding_provider = "mock"
+
+
+@pytest.fixture(autouse=True)
+def _mock_websearch() -> None:
+    """Never search the real web in tests; nothing is found unless a test queues it."""
+    from app.integrations.websearch import mock as websearch_mock
+
+    settings.websearch_provider = "mock"
+    websearch_mock.reset()
+
+
+@pytest.fixture(autouse=True)
 def _local_storage(tmp_path: object) -> None:
     """Store uploads under a throwaway temp directory, not the repo tree."""
     from app.core.config import settings

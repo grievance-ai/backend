@@ -44,6 +44,8 @@ dependencies = [
     "structlog>=24.4",
     "pyyaml>=6.0",
     "httpx>=0.27",
+    # scheme search (cosine similarity over scheme embeddings)
+    "numpy>=2.1,<3",
 ]
 
 [project.optional-dependencies]

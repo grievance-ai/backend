@@ -165,6 +165,7 @@ class AnswerStatus(str, enum.Enum):
     not_in_data = "not_in_data"
     needs_info = "needs_info"
     off_topic = "off_topic"
+    official_web = "official_web"  # found on official government websites, not verified by us
 
 
 class SchemeLevel(str, enum.Enum):
@@ -183,6 +184,11 @@ class ConditionOperator(str, enum.Enum):
     not_in = "not_in"
     contains = "contains"
     exists = "exists"
+
+
+class SchemeReviewStatus(str, enum.Enum):
+    verified = "verified"  # checked by a person against the official source
+    needs_review = "needs_review"  # imported or changed upstream, not checked yet
 
 
 class SchemeInterestType(str, enum.Enum):

@@ -12,6 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.models.enums import SchemeReviewStatus
 from app.models.geography import Department, District
 from app.models.grievance import GrievanceCategory
 from app.models.scheme import Scheme, SchemeEligibilityCondition
@@ -38,6 +39,8 @@ _SCHEME_FIELDS = (
     "category_tags",
     "keywords",
     "last_verified_on",
+    "source_name",
+    "source_url",
 )
 
 
@@ -111,6 +114,29 @@ def load_file(path: Path = KNOWLEDGE_PATH) -> dict[str, Any]:
     return cast("dict[str, Any]", yaml.safe_load(path.read_text(encoding="utf-8")) or {})
 
 
+def _scheme_changed(
+    scheme: Scheme,
+    row: dict[str, Any],
+    department: Department | None,
+    conditions: list[tuple[Any, ...]],
+) -> bool:
+    """Whether the file's version of an existing scheme differs from the database."""
+    for field in _SCHEME_FIELDS:
+        if field == "last_verified_on" or field not in row:
+            continue
+        if getattr(scheme, field) != row[field]:
+            return True
+    if scheme.department_id != (department.id if department else None):
+        return True
+    if scheme.is_active != row.get("is_active", True):
+        return True
+    current = [
+        (c.field_name, c.operator, c.value, c.description, c.description_pa, c.group_key)
+        for c in scheme.conditions
+    ]
+    return current != conditions
+
+
 async def seed_knowledge(db: AsyncSession, data: dict[str, Any] | None = None) -> tuple[int, int]:
     """Upsert departments and schemes. Returns (departments, schemes) counts."""
     data = data if data is not None else load_file()
@@ -123,28 +149,58 @@ async def seed_knowledge(db: AsyncSession, data: dict[str, Any] | None = None) -
             .where(Scheme.slug == row["slug"])
             .options(selectinload(Scheme.conditions))
         )
+        is_new = scheme is None
         if scheme is None:
             scheme = Scheme(slug=row["slug"])
             db.add(scheme)
-        for field in _SCHEME_FIELDS:
-            if field in row:
-                setattr(scheme, field, row[field])
         dept_code = row.get("department")
-        scheme.department = departments.get(dept_code) if dept_code else None
-        scheme.is_active = row.get("is_active", True)
-        scheme.conditions = [
-            SchemeEligibilityCondition(
-                field_name=c["field"],
-                operator=c["operator"],
-                value=c["value"],
-                description=c["description"],
-                description_pa=c.get("description_pa"),
-                is_mandatory=c.get("group") is None,
-                group_key=c.get("group"),
-                sort_order=i,
+        department = departments.get(dept_code) if dept_code else None
+        conditions = [
+            (
+                c["field"],
+                c["operator"],
+                c["value"],
+                c["description"],
+                c.get("description_pa"),
+                c.get("group"),
             )
-            for i, c in enumerate(row.get("conditions", []))
+            for c in row.get("conditions", [])
         ]
+        changed = is_new or _scheme_changed(scheme, row, department, conditions)
+
+        for field in _SCHEME_FIELDS:
+            # A date set by an administrator in the app is kept unless the file sets one.
+            if field in row and not (field == "last_verified_on" and row[field] is None):
+                setattr(scheme, field, row[field])
+        scheme.department = department
+        scheme.is_active = row.get("is_active", True)
+
+        # Verified only once a person has checked it against the official source:
+        # in the file (last_verified_on / review_status) or on the admin Schemes page.
+        # A scheme whose content changed goes back to needs_review.
+        if row.get("review_status"):
+            scheme.review_status = row["review_status"]
+        elif row.get("last_verified_on"):
+            scheme.review_status = SchemeReviewStatus.verified.value
+        elif changed:
+            scheme.review_status = SchemeReviewStatus.needs_review.value
+
+        if changed:
+            scheme.conditions = [
+                SchemeEligibilityCondition(
+                    field_name=field_name,
+                    operator=operator,
+                    value=value,
+                    description=description,
+                    description_pa=description_pa,
+                    is_mandatory=group is None,
+                    group_key=group,
+                    sort_order=i,
+                )
+                for i, (field_name, operator, value, description, description_pa, group) in (
+                    enumerate(conditions)
+                )
+            ]
 
     await db.commit()
     return len(data.get("departments", [])), len(data.get("schemes", []))

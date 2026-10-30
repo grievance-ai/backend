@@ -32,7 +32,12 @@ from app.models.permission import Permission
 from app.models.phone import Phone
 from app.models.profile import Profile
 from app.models.restriction import Restriction
-from app.models.scheme import Scheme, SchemeEligibilityCondition, SchemeInterest
+from app.models.scheme import (
+    Scheme,
+    SchemeEligibilityCondition,
+    SchemeEmbedding,
+    SchemeInterest,
+)
 from app.models.service_account import ServiceAccount
 from app.models.staff_profile import StaffProfile
 from app.models.user import User
@@ -64,6 +69,7 @@ __all__ = [
     "Restriction",
     "Scheme",
     "SchemeEligibilityCondition",
+    "SchemeEmbedding",
     "SchemeInterest",
     "ServiceAccount",
     "StaffProfile",

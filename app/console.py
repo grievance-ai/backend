@@ -44,22 +44,47 @@ def cmd_seed(_args: argparse.Namespace) -> int:
 
 
 def cmd_seed_knowledge(_args: argparse.Namespace) -> int:
-    """Load config/knowledge/schemes.yml into the database (idempotent)."""
+    """Load config/knowledge/ into the database (idempotent), then update scheme vectors."""
     from app.db.knowledge import seed_geography, seed_grievance_categories, seed_knowledge
-    from app.db.session import AsyncSessionLocal
+    from app.integrations.embeddings import EmbeddingError
+    from app.services.scheme_search import refresh_embeddings
 
-    async def run() -> tuple[int, int, int, int]:
+    async def run() -> tuple[int, int, int, int, str]:
+        # One event loop for everything: the DB pool is bound to the loop it starts on.
         async with AsyncSessionLocal() as db:
             districts = await seed_geography(db)
             departments, schemes = await seed_knowledge(db)
             categories = await seed_grievance_categories(db)
-            return districts, departments, schemes, categories
+            try:
+                embedded = f"{await refresh_embeddings(db)} updated"
+            except EmbeddingError as exc:
+                # Best effort: the assistant falls back to keyword search without vectors.
+                embedded = f"not updated ({exc})"
+            return districts, departments, schemes, categories, embedded
 
-    districts, departments, schemes, categories = asyncio.run(run())
+    districts, departments, schemes, categories, embedded = asyncio.run(run())
     print(
         f"Loaded {districts} districts, {departments} scheme departments, {schemes} schemes "
-        f"and {categories} grievance categories."
+        f"and {categories} grievance categories. Scheme embeddings: {embedded}."
     )
+    return 0
+
+
+def cmd_embed_schemes(args: argparse.Namespace) -> int:
+    """(Re)compute scheme embeddings for the assistant's scheme search."""
+    from app.integrations.embeddings import EmbeddingError
+    from app.services.scheme_search import refresh_embeddings
+
+    async def run() -> int:
+        async with AsyncSessionLocal() as db:
+            return await refresh_embeddings(db, force=args.force)
+
+    try:
+        count = asyncio.run(run())
+    except EmbeddingError as exc:
+        print(f"Scheme embeddings not updated: {exc}", file=sys.stderr)
+        return 1
+    print(f"Scheme embeddings: {count} updated.")
     return 0
 
 
@@ -131,6 +156,10 @@ def build_parser() -> argparse.ArgumentParser:
         "seed-knowledge", help="load districts and the scheme knowledge base (config/knowledge/)"
     )
     p_knowledge.set_defaults(func=cmd_seed_knowledge)
+
+    p_embed = sub.add_parser("embed-schemes", help="update scheme embeddings for scheme search")
+    p_embed.add_argument("--force", action="store_true", help="re-embed every scheme")
+    p_embed.set_defaults(func=cmd_embed_schemes)
 
     p_staff = sub.add_parser(
         "seed-demo-staff", help="create demo officer/admin accounts (config/knowledge/)"

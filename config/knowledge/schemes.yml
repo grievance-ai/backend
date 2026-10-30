@@ -1,11 +1,18 @@
 # Scheme knowledge base — the ONLY source the assistant may answer from.
 #
-# STARTER SET, NOT YET VERIFIED. Every entry has `last_verified_on: null`.
-# Before the demo, check each one against its official_url, fix anything
-# outdated, then set last_verified_on to the date you checked it.
+# NOT YET VERIFIED BY A PERSON. The first six are a starter set; the rest (added
+# 30 Oct 2026) were written from official sources only: the Punjab department
+# sites, the Punjab Social Justice department's 2026 schemes brochure, central
+# scheme portals, and pib.gov.in. Each one's `source_url` is where its facts came
+# from. Before the demo, check each against its source, fix anything outdated,
+# then set last_verified_on to the date you checked it.
 #
 # Load / update (idempotent, upserts by slug):
 #   docker compose run --rm api python -m app.console seed-knowledge
+#
+# Source (optional per scheme): `source_name` and `source_url` say where the text
+# came from (credit myScheme prominently if its text is reused). `review_status`
+# is derived: needs_review until `last_verified_on` is set, then verified.
 #
 # Eligibility conditions: `field` names that match a citizen profile attribute
 # (occupation, land_holding_acres, income_band, social_category, gender, age)
@@ -28,6 +35,43 @@ departments:
   - code: SOCIAL_JUSTICE
     name_en: Ministry of Social Justice & Empowerment
     name_pa: ਸਮਾਜਿਕ ਨਿਆਂ ਅਤੇ ਅਧਿਕਾਰਤਾ ਮੰਤਰਾਲਾ
+  - code: FINANCE
+    name_en: Ministry of Finance
+    name_pa: ਵਿੱਤ ਮੰਤਰਾਲਾ
+  - code: WCD
+    name_en: Ministry of Women & Child Development
+    name_pa: ਇਸਤਰੀ ਅਤੇ ਬਾਲ ਵਿਕਾਸ ਮੰਤਰਾਲਾ
+  - code: LABOUR
+    name_en: Ministry of Labour & Employment
+    name_pa: ਕਿਰਤ ਅਤੇ ਰੁਜ਼ਗਾਰ ਮੰਤਰਾਲਾ
+  - code: MSME
+    name_en: Ministry of Micro, Small & Medium Enterprises
+    name_pa: ਸੂਖਮ, ਲਘੂ ਅਤੇ ਦਰਮਿਆਨੇ ਉੱਦਮ ਮੰਤਰਾਲਾ
+  - code: MNRE
+    name_en: Ministry of New & Renewable Energy
+    name_pa: ਨਵੀਂ ਅਤੇ ਨਵਿਆਉਣਯੋਗ ਊਰਜਾ ਮੰਤਰਾਲਾ
+  - code: HOUSING_URBAN
+    name_en: Ministry of Housing & Urban Affairs
+    name_pa: ਆਵਾਸ ਅਤੇ ਸ਼ਹਿਰੀ ਮਾਮਲੇ ਮੰਤਰਾਲਾ
+  - code: FOOD
+    name_en: Department of Food & Public Distribution
+    name_pa: ਖੁਰਾਕ ਅਤੇ ਜਨਤਕ ਵੰਡ ਵਿਭਾਗ
+  - code: HEALTH_FW
+    name_en: Ministry of Health & Family Welfare
+    name_pa: ਸਿਹਤ ਅਤੇ ਪਰਿਵਾਰ ਭਲਾਈ ਮੰਤਰਾਲਾ
+  # Punjab departments (PB_SOCIAL is shared with grievance_categories.yml: keep the names identical)
+  - code: PB_SOCIAL
+    name_en: Department of Social Security, Women & Child Development, Punjab
+    name_pa: ਸਮਾਜਿਕ ਸੁਰੱਖਿਆ, ਇਸਤਰੀ ਅਤੇ ਬਾਲ ਵਿਕਾਸ ਵਿਭਾਗ, ਪੰਜਾਬ
+  - code: PB_WELFARE
+    name_en: Department of Social Justice, Empowerment & Minorities, Punjab
+    name_pa: ਸਮਾਜਿਕ ਨਿਆਂ, ਅਧਿਕਾਰਤਾ ਅਤੇ ਘੱਟ ਗਿਣਤੀ ਵਿਭਾਗ, ਪੰਜਾਬ
+  - code: PB_SCFC
+    name_en: Punjab Scheduled Castes Land Development & Finance Corporation
+    name_pa: ਪੰਜਾਬ ਅਨੁਸੂਚਿਤ ਜਾਤੀਆਂ ਭੌਂ ਵਿਕਾਸ ਅਤੇ ਵਿੱਤ ਕਾਰਪੋਰੇਸ਼ਨ
+  - code: PB_SHA
+    name_en: State Health Agency, Punjab
+    name_pa: ਸਟੇਟ ਹੈਲਥ ਏਜੰਸੀ, ਪੰਜਾਬ
 
 schemes:
   - slug: pm-kisan
@@ -273,3 +317,1323 @@ schemes:
         operator: eq
         value: true
         description: You are studying in Class 11 or above (after Class 10).
+
+  # ---------------------------------------------------------------------------
+  # Punjab state schemes. Sources: the department's own pages, and the Punjab
+  # Social Justice department's 2026 schemes brochure (welfare.punjab.gov.in).
+  # ---------------------------------------------------------------------------
+
+  - slug: pb-old-age-pension
+    name: Old Age Pension (Punjab)
+    short_name: Punjab Budhapa Pension
+    name_pa: ਬੁਢਾਪਾ ਪੈਨਸ਼ਨ (ਪੰਜਾਬ)
+    department: PB_SOCIAL
+    level: state
+    state_code: PB
+    description: >-
+      Monthly pension from the Punjab Government for elderly people with low
+      income: women aged 58 and above and men aged 65 and above.
+    benefits: Rs 1,500 per month, paid into your bank account.
+    required_documents:
+      - "Age proof: Aadhaar card, voter card, matriculation certificate or birth certificate"
+      - Bank account details
+      - Self-declaration of income and land
+    application_steps:
+      - Apply at a Sewa Kendra, the District Social Security Officer (DSSO), Child Development Project Officer (CDPO), SDM office, BDPO office, Anganwadi centre or your Panchayat.
+      - The Patwari (village) or the Municipal Committee (town) verifies your land, property and residence.
+      - The DSSO sanctions the pension; it is then paid monthly through your bank.
+    application_mode: Sewa Kendra / DSSO / Anganwadi / Panchayat
+    official_url: https://sswcd.punjab.gov.in/
+    source_name: Department of Social Security, Women & Child Development, Punjab
+    source_url: https://sswcd.punjab.gov.in/en/node/5520
+    category_tags: [pension, elderly]
+    keywords: [old age pension, budhapa pension, senior citizen, elderly, ਬੁਢਾਪਾ ਪੈਨਸ਼ਨ, ਪੈਨਸ਼ਨ, ਬਜ਼ੁਰਗ]
+    conditions:
+      - field: woman_aged_58_plus
+        operator: eq
+        value: true
+        group: age_rule
+        description: You are a woman aged 58 or above.
+      - field: man_aged_65_plus
+        operator: eq
+        value: true
+        group: age_rule
+        description: Or you are a man aged 65 or above.
+      - field: annual_income_rupees
+        operator: lte
+        value: 60000
+        description: >-
+          Your total annual income, including business, rent or interest, is
+          Rs 60,000 or less.
+      - field: land_holding_acres
+        operator: lte
+        value: 2.5
+        description: >-
+          You and your spouse together own less than 2.5 acres of irrigated
+          (nehri/chahi) land, or not more than 5 acres of barani or waterlogged land.
+      - field: employed_or_taxpayer
+        operator: eq
+        value: false
+        description: >-
+          You are not in a government or private job, and you do not pay income
+          tax or professional tax.
+
+  - slug: pb-widow-destitute-women
+    name: Financial Assistance to Widows and Destitute Women (Punjab)
+    name_pa: ਵਿਧਵਾ ਅਤੇ ਬੇਸਹਾਰਾ ਔਰਤਾਂ ਲਈ ਵਿੱਤੀ ਸਹਾਇਤਾ (ਪੰਜਾਬ)
+    department: PB_SOCIAL
+    level: state
+    state_code: PB
+    description: >-
+      Monthly financial help from the Punjab Government for widows and destitute
+      women below 58, and unmarried women above 30, with low income.
+    benefits: Rs 1,500 per month, paid into your bank account.
+    required_documents:
+      - "Age proof: Aadhaar card, voter card, matriculation certificate or birth certificate"
+      - Bank account details
+      - Self-declaration of income
+    application_steps:
+      - Apply at a Sewa Kendra, the District Social Security Officer (DSSO), CDPO, SDM office, BDPO office, Anganwadi centre or your Panchayat.
+      - Your residence and income are verified (Patwari in villages, Municipal Committee in towns).
+      - The DSSO sanctions the assistance; it is then paid monthly through your bank.
+    application_mode: Sewa Kendra / DSSO / Anganwadi / Panchayat
+    official_url: https://sswcd.punjab.gov.in/
+    source_name: Department of Social Security, Women & Child Development, Punjab
+    source_url: https://sswcd.punjab.gov.in/en/node/5520
+    category_tags: [pension, women]
+    keywords: [widow pension, vidhwa pension, destitute women, ਵਿਧਵਾ ਪੈਨਸ਼ਨ, ਵਿਧਵਾ, ਬੇਸਹਾਰਾ ਔਰਤ]
+    conditions:
+      - field: gender
+        operator: eq
+        value: female
+        description: The applicant is a woman.
+      - field: marital_status
+        operator: in
+        value: [widowed, separated, divorced]
+        group: situation
+        description: You are a widow or a destitute woman, below 58 years of age.
+      - field: marital_status
+        operator: eq
+        value: single
+        group: situation
+        description: Or you are an unmarried woman above 30 years of age.
+      - field: annual_income_rupees
+        operator: lte
+        value: 60000
+        description: >-
+          Your total annual income, including business, rent or interest, is
+          Rs 60,000 or less.
+
+  - slug: pb-dependent-children
+    name: Financial Assistance to Dependent Children (Punjab)
+    name_pa: ਆਸ਼ਰਿਤ ਬੱਚਿਆਂ ਲਈ ਵਿੱਤੀ ਸਹਾਇਤਾ (ਪੰਜਾਬ)
+    department: PB_SOCIAL
+    level: state
+    state_code: PB
+    description: >-
+      Monthly help for children below 21 whose mother or father (or both) has
+      died, is regularly absent from home, or is physically or mentally unable
+      to look after the family.
+    benefits: >-
+      Rs 1,500 per month. If a parent dies, a near relative is named guardian
+      and the help continues without a fresh application.
+    required_documents:
+      - "Child's age proof: Aadhaar card or birth certificate"
+      - Death certificate of the parent, or proof of the parent's absence or incapacity
+      - Bank account details
+    application_steps:
+      - Apply at a Sewa Kendra, the District Social Security Officer (DSSO), CDPO, SDM office, Anganwadi centre or your Panchayat.
+      - The application is verified, then sanctioned by the DSSO.
+      - The amount is paid monthly through the bank.
+    application_mode: Sewa Kendra / DSSO / Anganwadi / Panchayat
+    official_url: https://sswcd.punjab.gov.in/
+    source_name: Department of Social Security, Women & Child Development, Punjab
+    source_url: https://sswcd.punjab.gov.in/en/node/5520
+    category_tags: [children, pension]
+    keywords: [orphan, dependent children, single parent child, ਅਨਾਥ, ਆਸ਼ਰਿਤ ਬੱਚੇ, ਬੱਚਿਆਂ ਲਈ ਸਹਾਇਤਾ]
+    conditions:
+      - field: child_age
+        operator: lt
+        value: 21
+        description: The child is below 21 years of age.
+      - field: parent_dead_absent_or_incapable
+        operator: eq
+        value: true
+        description: >-
+          The child's mother, father or both have died, are regularly absent
+          from home, or are physically or mentally unable to care for the family.
+      - field: annual_income_rupees
+        operator: lte
+        value: 60000
+        description: The family's total annual income is Rs 60,000 or less.
+
+  - slug: pb-disability-assistance
+    name: Financial Assistance to Persons with Disabilities (Punjab)
+    name_pa: ਦਿਵਿਆਂਗ ਵਿਅਕਤੀਆਂ ਲਈ ਵਿੱਤੀ ਸਹਾਇਤਾ (ਪੰਜਾਬ)
+    department: PB_SOCIAL
+    level: state
+    state_code: PB
+    description: >-
+      Monthly help for blind, physically disabled, deaf and mute, and mentally
+      disabled persons who cannot earn a living.
+    benefits: Rs 1,500 per month, paid into your bank account.
+    required_documents:
+      - Disability certificate
+      - "Age proof: Aadhaar card, voter card or birth certificate"
+      - Bank account details
+    application_steps:
+      - Apply at a Sewa Kendra, the District Social Security Officer (DSSO), CDPO, SDM office, Anganwadi centre or your Panchayat.
+      - The application is verified, then sanctioned by the DSSO.
+      - The amount is paid monthly through the bank.
+    application_mode: Sewa Kendra / DSSO / Anganwadi / Panchayat
+    official_url: https://sswcd.punjab.gov.in/
+    source_name: Department of Social Security, Women & Child Development, Punjab
+    source_url: https://sswcd.punjab.gov.in/en/node/5520
+    category_tags: [disability, pension]
+    keywords: [disability pension, handicapped, viklang, divyang, blind, deaf, ਅਪੰਗ, ਦਿਵਿਆਂਗ, ਅੰਗਹੀਣ ਪੈਨਸ਼ਨ]
+    conditions:
+      - field: disability_percent
+        operator: gte
+        value: 50
+        description: >-
+          You have a physical disability of 50% or more (mentally disabled
+          persons are eligible at any level).
+      - field: annual_income_rupees
+        operator: lte
+        value: 60000
+        description: Your total annual income is Rs 60,000 or less.
+
+  - slug: pb-ashirwad
+    name: Ashirwad (Shagun) Scheme
+    short_name: Ashirwad
+    name_pa: ਆਸ਼ੀਰਵਾਦ (ਸ਼ਗਨ) ਸਕੀਮ
+    department: PB_WELFARE
+    level: state
+    state_code: PB
+    description: >-
+      Punjab Government money at the time of a daughter's marriage, for
+      families from Scheduled Castes, Christian community, Backward Classes and
+      economically weaker sections, daughters of widows of any caste, and for
+      the remarriage of SC widows or divorced women.
+    benefits: Rs 51,000 for the marriage, for up to two daughters per family.
+    required_documents:
+      - Aadhaar card
+      - Date of birth proof of the girl
+      - Income certificate
+      - Caste certificate (where applicable)
+      - Proof of Punjab residence
+    application_steps:
+      - Apply online on the Ashirwad portal (ashirwad.punjab.gov.in).
+      - Apply before the wedding date or within 30 days after the wedding.
+    application_mode: online
+    deadline_info: Before the wedding or within 30 days after it.
+    official_url: https://ashirwad.punjab.gov.in/
+    source_name: Department of Social Justice, Empowerment & Minorities, Punjab (schemes brochure 2026)
+    source_url: https://welfare.punjab.gov.in/Static/PDF/Publications/SJEMPUNJAB.pdf
+    category_tags: [women, marriage]
+    keywords: [shagun, marriage, daughter wedding, ਸ਼ਗਨ, ਆਸ਼ੀਰਵਾਦ, ਵਿਆਹ, ਧੀ ਦਾ ਵਿਆਹ]
+    conditions:
+      - field: social_category
+        operator: in
+        value: [sc, obc]
+        group: family_group
+        description: The family is Scheduled Caste or Backward Class.
+      - field: family_group_ews_christian_or_widow
+        operator: eq
+        value: true
+        group: family_group
+        description: >-
+          Or the family is economically weaker, Christian, or the girl is the
+          daughter of a widow (any caste).
+      - field: bride_age
+        operator: gte
+        value: 18
+        description: The girl is 18 or older.
+      - field: annual_income_rupees
+        operator: lte
+        value: 32790
+        description: The family's annual income from all sources is Rs 32,790 or less.
+      - field: punjab_resident
+        operator: eq
+        value: true
+        description: The girl's parents or guardian are permanent residents of Punjab.
+
+  - slug: pb-mukh-mantri-sehat-yojana
+    name: Mukh Mantri Sehat Yojana
+    short_name: MMSY
+    name_pa: ਮੁੱਖ ਮੰਤਰੀ ਸਿਹਤ ਯੋਜਨਾ
+    department: PB_SHA
+    level: state
+    state_code: PB
+    description: >-
+      Cashless hospital treatment for every Punjab family, including government
+      employees and pensioners. No income limit.
+    benefits: >-
+      Cashless treatment of up to Rs 10 lakh per family per year at empanelled
+      government and private hospitals in Punjab, covering more than 2,000
+      treatment packages.
+    required_documents:
+      - Aadhaar card of each family member
+      - Voter ID card
+    application_steps:
+      - Go to your nearest Common Service Centre (CSC) with the identity documents of all family members.
+      - Registration is confirmed at once by SMS.
+      - Your Sehat Card is given at the CSC within 2-3 weeks. You can also download it from the State Health Agency website.
+    application_mode: CSC
+    official_url: https://sha.punjab.gov.in/
+    contact: Helpline 104
+    source_name: State Health Agency, Punjab
+    source_url: http://sha.punjab.gov.in/shapunjab/index.php
+    category_tags: [health, insurance]
+    keywords: [sehat card, health insurance, free treatment, hospital, 10 lakh, ਸਿਹਤ ਕਾਰਡ, ਸਿਹਤ ਬੀਮਾ, ਮੁਫ਼ਤ ਇਲਾਜ, ਹਸਪਤਾਲ]
+    conditions:
+      - field: punjab_resident
+        operator: eq
+        value: true
+        description: You are a resident of Punjab (with Punjab Aadhaar and voter ID).
+
+  - slug: pb-sc-direct-loan
+    name: Direct Loan Scheme (Punjab SC Finance Corporation)
+    name_pa: ਸਿੱਧਾ ਕਰਜ਼ਾ ਸਕੀਮ (ਪੰਜਾਬ ਅਨੁਸੂਚਿਤ ਜਾਤੀਆਂ ਵਿੱਤ ਕਾਰਪੋਰੇਸ਼ਨ)
+    department: PB_SCFC
+    level: state
+    state_code: PB
+    description: >-
+      Low-interest loans from the Punjab Scheduled Castes Land Development &
+      Finance Corporation to start or grow a business or buy land.
+    benefits: >-
+      Loans at up to 8% interest: up to Rs 10 lakh for an income-generating
+      business, and up to Rs 30 lakh for buying land. You pay 5% of the loan
+      amount yourself.
+    required_documents:
+      - Scheduled Caste certificate (original)
+      - Three attested passport-size photos
+      - Surety of property worth the loan amount (assessed by the Patwari/Tehsildar or municipal officer); a permanent Punjab government employee can stand as surety instead
+    application_steps:
+      - Fill in the loan form and submit it to the District Manager of the Corporation with the documents.
+      - The surety is assessed.
+      - The loan is sanctioned and released.
+    application_mode: District office of the Corporation
+    official_url: https://welfare.punjab.gov.in/
+    source_name: Department of Social Justice, Empowerment & Minorities, Punjab (schemes brochure 2026)
+    source_url: https://welfare.punjab.gov.in/Static/PDF/Publications/SJEMPUNJAB.pdf
+    category_tags: [loan, business, sc]
+    keywords: [loan, business loan, self employment, sc loan, ਕਰਜ਼ਾ, ਲੋਨ, ਕਾਰੋਬਾਰ, ਰੁਜ਼ਗਾਰ]
+    conditions:
+      - field: social_category
+        operator: eq
+        value: sc
+        description: You belong to a Scheduled Caste and are a permanent resident of Punjab.
+      - field: age
+        operator: gte
+        value: 18
+        description: You are between 18 and 55 years of age.
+      - field: age
+        operator: lte
+        value: 55
+        description: You are 55 or younger.
+      - field: annual_income_rupees
+        operator: lte
+        value: 300000
+        description: Your annual income is Rs 3 lakh or less.
+
+  - slug: pb-ambedkar-coaching
+    name: Free Coaching at Dr. Ambedkar Institute of Careers & Courses, Mohali
+    name_pa: ਡਾ. ਅੰਬੇਡਕਰ ਇੰਸਟੀਚਿਊਟ ਆਫ ਕਰੀਅਰਜ਼ ਐਂਡ ਕੋਰਸਿਜ਼, ਮੋਹਾਲੀ ਵਿਖੇ ਮੁਫ਼ਤ ਕੋਚਿੰਗ
+    department: PB_WELFARE
+    level: state
+    state_code: PB
+    description: >-
+      Free coaching for competitive exams (IAS, PCS, banking and others) for
+      Scheduled Caste, Backward Class and minority candidates, at the Punjab
+      Government's institute in Phase 3B2, Mohali.
+    benefits: >-
+      Free coaching (about 220 candidates a year) with free hostel. A stipend of
+      Rs 3,000 per month for outstation candidates and Rs 1,500 per month for
+      local candidates during coaching.
+    required_documents:
+      - Caste or minority certificate
+      - Family income certificate
+    application_steps:
+      - Watch for the coaching admission notice from the Department of Social Justice, Empowerment & Minorities, Punjab.
+      - Apply as per the notice for the course you want.
+    application_mode: as per department notice
+    official_url: https://welfare.punjab.gov.in/
+    source_name: Department of Social Justice, Empowerment & Minorities, Punjab (schemes brochure 2026)
+    source_url: https://welfare.punjab.gov.in/Static/PDF/Publications/SJEMPUNJAB.pdf
+    category_tags: [education, employment, coaching]
+    keywords: [coaching, ias, pcs, bank exam, competitive exam, ਕੋਚਿੰਗ, ਮੁਕਾਬਲੇ ਦੀ ਪ੍ਰੀਖਿਆ, ਨੌਕਰੀ]
+    conditions:
+      - field: social_category
+        operator: in
+        value: [sc, obc]
+        group: category
+        description: You are Scheduled Caste or Backward Class.
+      - field: is_minority
+        operator: eq
+        value: true
+        group: category
+        description: Or you belong to a minority community.
+      - field: annual_income_rupees
+        operator: lt
+        value: 300000
+        description: Your parents' annual income is below Rs 3 lakh.
+
+  # ---------------------------------------------------------------------------
+  # Central schemes. Sources: each scheme's official portal, or the Government
+  # of India's Press Information Bureau (pib.gov.in) where the portal page could
+  # not be read.
+  # ---------------------------------------------------------------------------
+
+  - slug: pmjjby
+    name: Pradhan Mantri Jeevan Jyoti Bima Yojana
+    short_name: PMJJBY
+    name_pa: ਪ੍ਰਧਾਨ ਮੰਤਰੀ ਜੀਵਨ ਜਯੋਤੀ ਬੀਮਾ ਯੋਜਨਾ
+    department: FINANCE
+    level: central
+    description: >-
+      Low-cost life insurance for anyone aged 18 to 50 with a bank account,
+      renewed every year.
+    benefits: >-
+      Rs 2 lakh paid to the family on the death of the insured person for any
+      reason, for a premium of Rs 436 a year, auto-debited from the bank account.
+    required_documents:
+      - Savings bank or post office account
+      - Aadhaar card
+    application_steps:
+      - Enrol at your bank or post office branch, or through your bank's net banking or mobile app.
+      - Give consent for the yearly auto-debit of the premium.
+    application_mode: bank or post office
+    official_url: https://www.jansuraksha.gov.in/
+    source_name: Press Information Bureau, Government of India
+    source_url: https://www.pib.gov.in/Pressreleaseshare.aspx?PRID=1823754
+    category_tags: [insurance, life-insurance]
+    keywords: [life insurance, bima, jeevan jyoti, Rs 436, ਜੀਵਨ ਬੀਮਾ, ਬੀਮਾ]
+    conditions:
+      - field: age
+        operator: gte
+        value: 18
+        description: You are 18 or older.
+      - field: age
+        operator: lte
+        value: 50
+        description: You are 50 or younger when you join.
+      - field: has_bank_account
+        operator: eq
+        value: true
+        description: You have a savings bank or post office account.
+
+  - slug: pmsby
+    name: Pradhan Mantri Suraksha Bima Yojana
+    short_name: PMSBY
+    name_pa: ਪ੍ਰਧਾਨ ਮੰਤਰੀ ਸੁਰੱਖਿਆ ਬੀਮਾ ਯੋਜਨਾ
+    department: FINANCE
+    level: central
+    description: >-
+      Very low-cost accident insurance for anyone aged 18 to 70 with a bank
+      account, renewed every year.
+    benefits: >-
+      For a premium of Rs 20 a year: Rs 2 lakh for accidental death or
+      permanent total disability, and Rs 1 lakh for permanent partial
+      disability.
+    required_documents:
+      - Savings bank or post office account
+      - Aadhaar card
+    application_steps:
+      - Enrol at your bank or post office branch, or through your bank's net banking or mobile app.
+      - Give consent for the yearly auto-debit of Rs 20.
+    application_mode: bank or post office
+    official_url: https://www.jansuraksha.gov.in/
+    source_name: Press Information Bureau, Government of India
+    source_url: https://www.pib.gov.in/Pressreleaseshare.aspx?PRID=1823754
+    category_tags: [insurance, accident]
+    keywords: [accident insurance, suraksha bima, 20 rupees, ਦੁਰਘਟਨਾ ਬੀਮਾ, ਬੀਮਾ]
+    conditions:
+      - field: age
+        operator: gte
+        value: 18
+        description: You are 18 or older.
+      - field: age
+        operator: lte
+        value: 70
+        description: You are 70 or younger.
+      - field: has_bank_account
+        operator: eq
+        value: true
+        description: You have a savings bank or post office account.
+
+  - slug: apy
+    name: Atal Pension Yojana
+    short_name: APY
+    name_pa: ਅਟਲ ਪੈਨਸ਼ਨ ਯੋਜਨਾ
+    department: FINANCE
+    level: central
+    description: >-
+      A pension scheme for people aged 18 to 40: pay a small amount every month
+      and get a fixed pension after 60.
+    benefits: >-
+      A guaranteed pension of Rs 1,000 to Rs 5,000 per month from age 60,
+      depending on what you choose and your age when you join. For example,
+      joining at 18 costs Rs 42 to Rs 210 a month; joining at 40 costs Rs 291
+      to Rs 1,454 a month.
+    required_documents:
+      - Savings bank or post office account
+      - Aadhaar card
+      - Mobile number
+    application_steps:
+      - Open the APY account at your bank or post office branch, or through your bank's net banking.
+      - Choose the pension amount; the monthly contribution is auto-debited.
+    application_mode: bank or post office
+    official_url: https://www.npscra.nsdl.co.in/scheme-details.php
+    source_name: Press Information Bureau, Government of India
+    source_url: https://static.pib.gov.in/WriteReadData/specificdocs/documents/2025/may/doc202558551701.pdf
+    category_tags: [pension, savings]
+    keywords: [atal pension, pension, retirement, budhapa, ਅਟਲ ਪੈਨਸ਼ਨ, ਪੈਨਸ਼ਨ, ਬੁਢਾਪਾ]
+    conditions:
+      - field: age
+        operator: gte
+        value: 18
+        description: You are 18 or older.
+      - field: age
+        operator: lte
+        value: 40
+        description: You are 40 or younger when you join.
+      - field: income_tax_payer
+        operator: eq
+        value: false
+        description: You do not pay income tax (income tax payers cannot join since 1 October 2022).
+
+  - slug: pmjdy
+    name: Pradhan Mantri Jan Dhan Yojana
+    short_name: PMJDY
+    name_pa: ਪ੍ਰਧਾਨ ਮੰਤਰੀ ਜਨ ਧਨ ਯੋਜਨਾ
+    department: FINANCE
+    level: central
+    description: >-
+      A basic bank account for anyone who does not have one, with no minimum
+      balance and no maintenance charges.
+    benefits: >-
+      A zero-balance account with a free RuPay debit card carrying Rs 2 lakh
+      accident insurance (Rs 1 lakh for accounts opened before 28 August 2018).
+      An overdraft of up to Rs 10,000 after 6 months of good account use (one
+      account holder per household).
+    required_documents:
+      - Aadhaar card (or another officially valid identity document)
+    application_steps:
+      - Visit any bank branch or Bank Mitra (business correspondent) outlet.
+      - Fill in the account opening form with your Aadhaar.
+    application_mode: bank branch or Bank Mitra
+    official_url: https://pmjdy.gov.in/
+    source_name: Press Information Bureau, Government of India
+    source_url: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2161401
+    category_tags: [banking]
+    keywords: [bank account, jan dhan, zero balance, rupay card, ਬੈਂਕ ਖਾਤਾ, ਜਨ ਧਨ]
+    conditions:
+      - field: age
+        operator: gte
+        value: 10
+        description: You are an Indian resident (adults, and minors above 10 with a guardian).
+      - field: has_bank_account
+        operator: eq
+        value: false
+        description: You do not already have a basic bank account.
+
+  - slug: sukanya-samriddhi
+    name: Sukanya Samriddhi Account
+    short_name: SSA
+    name_pa: ਸੁਕੰਨਿਆ ਸਮ੍ਰਿੱਧੀ ਖਾਤਾ
+    department: FINANCE
+    level: central
+    description: >-
+      A government savings account for a girl child below 10, for her education
+      and marriage, with a high interest rate set by the government.
+    benefits: >-
+      Deposit Rs 250 to Rs 1.5 lakh a year for 15 years; the account matures 21
+      years after opening. Up to 50% can be withdrawn after the girl turns 18 or
+      passes Class 10. The interest rate is set by the government every quarter.
+    required_documents:
+      - Birth certificate of the girl
+      - Identity and address proof of the parent or guardian
+    application_steps:
+      - Open the account at a post office or an authorised bank, with a first deposit of at least Rs 250.
+      - Deposit at least Rs 250 every year for 15 years.
+    application_mode: post office or bank
+    official_url: https://www.nsiindia.gov.in/
+    source_name: National Savings Institute (scheme rules) and Press Information Bureau
+    source_url: https://www.nsiindia.gov.in/writereaddata/SchemeRules/SukanyaSamriddhiAccountSchemeRule.pdf
+    category_tags: [savings, girl-child]
+    keywords: [sukanya, girl child, daughter savings, beti, ਸੁਕੰਨਿਆ, ਧੀ, ਬੱਚੀ, ਬਚਤ]
+    conditions:
+      - field: has_girl_child_below_10
+        operator: eq
+        value: true
+        description: You are the parent or guardian of a girl below 10 years of age.
+
+  - slug: pm-mudra
+    name: Pradhan Mantri MUDRA Yojana
+    short_name: PMMY
+    name_pa: ਪ੍ਰਧਾਨ ਮੰਤਰੀ ਮੁਦਰਾ ਯੋਜਨਾ
+    department: FINANCE
+    level: central
+    description: >-
+      Bank loans without collateral for small and micro businesses in
+      manufacturing, trading and services, including activities allied to
+      farming like dairy, poultry and beekeeping.
+    benefits: >-
+      Four loan sizes: Shishu up to Rs 50,000; Kishor Rs 50,000 to Rs 5 lakh;
+      Tarun Rs 5 lakh to Rs 10 lakh; Tarun Plus Rs 10 lakh to Rs 20 lakh (only
+      for those who repaid an earlier Tarun loan).
+    required_documents:
+      - Aadhaar card
+      - Business plan or proof of business
+      - Bank account details
+    application_steps:
+      - Apply at any bank, NBFC or microfinance institution branch, or online on the JanSamarth portal.
+      - The lender checks your business plan and sanctions the loan.
+    application_mode: bank or online
+    official_url: https://www.mudra.org.in/
+    source_name: Press Information Bureau, Government of India
+    source_url: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2249915
+    category_tags: [loan, business]
+    keywords: [mudra loan, business loan, shop loan, self employment, ਮੁਦਰਾ ਲੋਨ, ਕਾਰੋਬਾਰ, ਕਰਜ਼ਾ, ਦੁਕਾਨ]
+    conditions:
+      - field: runs_or_starts_small_business
+        operator: eq
+        value: true
+        description: >-
+          You run or want to start a small non-corporate business (not crop
+          farming itself).
+
+  - slug: pm-svanidhi
+    name: PM Street Vendor's AtmaNirbhar Nidhi
+    short_name: PM SVANidhi
+    name_pa: ਪੀਐਮ ਸਵਨਿਧੀ (ਰੇਹੜੀ-ਫੜ੍ਹੀ ਵਾਲਿਆਂ ਲਈ ਕਰਜ਼ਾ)
+    department: HOUSING_URBAN
+    level: central
+    description: >-
+      Small working-capital loans for street vendors in cities and towns,
+      including census towns.
+    benefits: >-
+      Loans in steps of Rs 15,000, Rs 25,000 and Rs 50,000. Vendors who repay
+      the second loan can get a credit card for more working capital.
+    required_documents:
+      - Aadhaar card linked to your mobile number
+      - Vending certificate, or survey reference number from your town's survey
+      - Bank account details
+    application_steps:
+      - Check on the PM SVANidhi portal whether you were covered in your town's (ULB) survey.
+      - Apply online with your Aadhaar-linked mobile number, or through a CSC or your municipal office.
+    application_mode: online / CSC / municipal office
+    official_url: https://pmsvanidhi.mohua.gov.in/
+    source_name: PM SVANidhi portal, Ministry of Housing & Urban Affairs
+    source_url: https://pmsvanidhi.mohua.gov.in/
+    category_tags: [loan, street-vendor, urban]
+    keywords: [street vendor, rehri, phari, thela, svanidhi, ਰੇਹੜੀ, ਫੜ੍ਹੀ, ਸਵਨਿਧੀ]
+    conditions:
+      - field: occupation
+        operator: eq
+        value: street_vendor
+        description: You are a street vendor in a city or town.
+
+  - slug: pm-vishwakarma
+    name: PM Vishwakarma
+    name_pa: ਪੀਐਮ ਵਿਸ਼ਵਕਰਮਾ
+    department: MSME
+    level: central
+    description: >-
+      Support for traditional artisans and craftspeople who work with their
+      hands and tools in 18 trades, such as carpenter, blacksmith, goldsmith,
+      potter, cobbler, mason, barber, tailor and washerman.
+    benefits: >-
+      Rs 15,000 toolkit grant; training with a stipend of Rs 500 per day;
+      collateral-free loans of Rs 1 lakh (first) and Rs 2 lakh (second) at 5%
+      interest; Re 1 per digital transaction (up to 100 a month).
+    required_documents:
+      - Aadhaar card
+      - Mobile number
+      - Bank account details
+    application_steps:
+      - Register at a Common Service Centre (CSC) with Aadhaar-based verification.
+      - Your registration is verified by the Gram Panchayat or urban local body, then the district committee.
+    application_mode: CSC
+    official_url: https://pmvishwakarma.gov.in/
+    source_name: PM Vishwakarma portal, Ministry of MSME
+    source_url: https://pmvishwakarma.gov.in/
+    category_tags: [artisan, loan, skill]
+    keywords: [artisan, carpenter, tarkhan, lohar, sunar, mochi, darzi, nai, dhobi, mistri, ਤਰਖਾਣ, ਲੁਹਾਰ, ਸੁਨਿਆਰ, ਦਰਜ਼ੀ, ਨਾਈ, ਮੋਚੀ, ਮਿਸਤਰੀ, ਕਾਰੀਗਰ]
+    conditions:
+      - field: traditional_artisan
+        operator: eq
+        value: true
+        description: You work with your hands and tools in one of the 18 listed trades, self-employed.
+      - field: age
+        operator: gte
+        value: 18
+        description: You are 18 or older.
+      - field: recent_govt_business_loan
+        operator: eq
+        value: false
+        description: You have not taken a PMEGP, PM SVANidhi or Mudra loan in the last 5 years.
+      - field: family_in_govt_service
+        operator: eq
+        value: false
+        description: >-
+          No one in your family is in government service; only one member per
+          family (husband, wife, unmarried children) can register.
+
+  - slug: pm-sym
+    name: Pradhan Mantri Shram Yogi Maan-dhan
+    short_name: PM-SYM
+    name_pa: ਪ੍ਰਧਾਨ ਮੰਤਰੀ ਸ਼੍ਰਮ ਯੋਗੀ ਮਾਨ-ਧਨ
+    department: LABOUR
+    level: central
+    description: >-
+      Pension scheme for unorganised workers (labourers, domestic workers,
+      rickshaw pullers, street vendors and others) earning up to Rs 15,000 a
+      month.
+    benefits: >-
+      An assured pension of Rs 3,000 per month from age 60. You pay a small
+      monthly amount based on your joining age, and the Government of India
+      pays an equal amount.
+    required_documents:
+      - Aadhaar card
+      - Savings bank account with IFSC
+      - Mobile number
+    application_steps:
+      - Enrol at a Common Service Centre (CSC) or on the Maandhan portal.
+      - The monthly contribution is auto-debited from your bank account.
+    application_mode: CSC or online
+    official_url: https://maandhan.in/
+    contact: Helpline 14434
+    source_name: Maandhan portal, Ministry of Labour & Employment
+    source_url: https://maandhan.in/
+    category_tags: [pension, workers]
+    keywords: [labour pension, mazdoor, shramik, unorganised worker, ਮਜ਼ਦੂਰ, ਪੈਨਸ਼ਨ, ਕਿਰਤੀ]
+    conditions:
+      - field: unorganised_worker
+        operator: eq
+        value: true
+        description: You are an unorganised-sector worker.
+      - field: age
+        operator: gte
+        value: 18
+        description: You are 18 or older.
+      - field: age
+        operator: lte
+        value: 40
+        description: You are 40 or younger when you join.
+      - field: monthly_income_rupees
+        operator: lte
+        value: 15000
+        description: Your monthly income is Rs 15,000 or less.
+
+  - slug: pm-kmy
+    name: Pradhan Mantri Kisan Maandhan Yojana
+    short_name: PM-KMY
+    name_pa: ਪ੍ਰਧਾਨ ਮੰਤਰੀ ਕਿਸਾਨ ਮਾਨਧਨ ਯੋਜਨਾ
+    department: AGRICULTURE
+    level: central
+    description: >-
+      Pension scheme for small and marginal farmers aged 18 to 40 with up to 2
+      hectares (about 5 acres) of cultivable land.
+    benefits: >-
+      An assured pension of Rs 3,000 per month from age 60. You pay Rs 55 to
+      Rs 200 a month depending on your joining age, and the Government pays an
+      equal amount. Your spouse can join separately; after your death your
+      spouse gets 50% as family pension.
+    required_documents:
+      - Aadhaar card
+      - Land records
+      - Savings bank account
+    application_steps:
+      - Enrol at a Common Service Centre (CSC) or on the Maandhan portal.
+      - The monthly contribution is auto-debited from your bank account.
+    application_mode: CSC or online
+    official_url: https://maandhan.in/
+    source_name: Press Information Bureau, Government of India
+    source_url: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2053142
+    category_tags: [pension, agriculture]
+    keywords: [farmer pension, kisan pension, maandhan, ਕਿਸਾਨ ਪੈਨਸ਼ਨ, ਕਿਸਾਨ, ਪੈਨਸ਼ਨ]
+    conditions:
+      - field: occupation
+        operator: eq
+        value: farmer
+        description: You are a farmer.
+      - field: land_holding_acres
+        operator: lte
+        value: 4.94
+        description: Your cultivable land is up to 2 hectares (about 4.94 acres).
+      - field: age
+        operator: gte
+        value: 18
+        description: You are 18 or older.
+      - field: age
+        operator: lte
+        value: 40
+        description: You are 40 or younger when you join.
+      - field: in_land_records_2019
+        operator: eq
+        value: true
+        description: Your name was in the state land records as on 1 August 2019.
+
+  - slug: pmfby
+    name: Pradhan Mantri Fasal Bima Yojana
+    short_name: PMFBY
+    name_pa: ਪ੍ਰਧਾਨ ਮੰਤਰੀ ਫ਼ਸਲ ਬੀਮਾ ਯੋਜਨਾ
+    department: AGRICULTURE
+    level: central
+    description: >-
+      Crop insurance at a low premium against crop loss from natural
+      calamities, pests and diseases.
+    benefits: >-
+      The farmer pays at most 2% of the sum insured for kharif crops, 1.5% for
+      rabi food and oilseed crops, and 5% for commercial and horticulture
+      crops. The government pays the rest of the premium.
+    required_documents:
+      - Aadhaar card
+      - Land records or tenancy agreement
+      - Sowing certificate
+      - Bank account details
+    application_steps:
+      - Enrol before the season's cut-off date through your bank, a Common Service Centre (CSC), the insurance company, or the PMFBY portal.
+      - Report crop loss quickly to the insurance company or helpline.
+    application_mode: bank / CSC / online
+    official_url: https://pmfby.gov.in/
+    source_name: Press Information Bureau, Government of India
+    source_url: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2237736
+    category_tags: [agriculture, insurance]
+    keywords: [crop insurance, fasal bima, crop loss, ਫ਼ਸਲ ਬੀਮਾ, ਫ਼ਸਲ, ਨੁਕਸਾਨ]
+    conditions:
+      - field: occupation
+        operator: eq
+        value: farmer
+        description: You are a farmer (owner or tenant) growing a notified crop in a notified area.
+
+  - slug: kcc
+    name: Kisan Credit Card (with interest subvention)
+    short_name: KCC
+    name_pa: ਕਿਸਾਨ ਕ੍ਰੈਡਿਟ ਕਾਰਡ
+    department: AGRICULTURE
+    level: central
+    description: >-
+      Short-term crop loans for farmers through a Kisan Credit Card, including
+      for animal husbandry and fisheries.
+    benefits: >-
+      Loans at 7% interest; repay on time and get a further 3% off, so the
+      effective rate is 4%. The interest benefit applies to loans up to Rs 3
+      lakh; Union Budget 2025-26 announced raising this to Rs 5 lakh, so
+      confirm the current limit with your bank. Loans only for animal
+      husbandry or fisheries get the benefit up to Rs 2 lakh.
+    required_documents:
+      - Aadhaar card
+      - Land records
+      - Bank account details
+    application_steps:
+      - Apply at your bank branch (commercial, regional rural or cooperative bank).
+      - The bank sets your card limit based on your crops and land.
+    application_mode: bank
+    official_url: https://agriwelfare.gov.in/
+    source_name: Press Information Bureau, Government of India
+    source_url: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2131989
+    category_tags: [agriculture, loan]
+    keywords: [kisan credit card, kcc, crop loan, farm loan, ਕਿਸਾਨ ਕ੍ਰੈਡਿਟ ਕਾਰਡ, ਫ਼ਸਲੀ ਕਰਜ਼ਾ, ਕਰਜ਼ਾ]
+    conditions:
+      - field: occupation
+        operator: in
+        value: [farmer, dairy_farmer, fisher]
+        description: You are a farmer, or in animal husbandry or fisheries.
+
+  - slug: pm-surya-ghar
+    name: PM Surya Ghar Muft Bijli Yojana
+    short_name: PM Surya Ghar
+    name_pa: ਪੀਐਮ ਸੂਰਿਆ ਘਰ ਮੁਫ਼ਤ ਬਿਜਲੀ ਯੋਜਨਾ
+    department: MNRE
+    level: central
+    description: >-
+      Subsidy for installing rooftop solar panels on your house, so you can get
+      up to 300 units of electricity free every month.
+    benefits: >-
+      Central subsidy of Rs 30,000 for a 1 kW system, Rs 60,000 for 2 kW and
+      Rs 78,000 for 3 kW or more. Collateral-free low-interest loans for
+      systems up to 3 kW.
+    required_documents:
+      - Recent electricity bill
+      - Aadhaar card
+      - Bank account details
+    application_steps:
+      - Register on the national rooftop solar portal with your electricity connection details.
+      - Choose a registered vendor and get the panels installed.
+      - After inspection and net-meter installation, the subsidy is paid into your bank account.
+    application_mode: online
+    official_url: https://pmsuryaghar.gov.in/
+    source_name: Press Information Bureau, Government of India
+    source_url: https://www.pib.gov.in/Pressreleaseshare.aspx?PRID=2010130
+    category_tags: [electricity, solar, household]
+    keywords: [solar panel, rooftop solar, free electricity, bijli, ਸੋਲਰ, ਮੁਫ਼ਤ ਬਿਜਲੀ, ਬਿਜਲੀ]
+    conditions:
+      - field: owns_house_with_roof
+        operator: eq
+        value: true
+        description: You own a house with a roof suitable for solar panels.
+      - field: has_electricity_connection
+        operator: eq
+        value: true
+        description: The house has an electricity connection in your name.
+
+  - slug: pmay-u-2
+    name: Pradhan Mantri Awas Yojana - Urban 2.0
+    short_name: PMAY-U 2.0
+    name_pa: ਪ੍ਰਧਾਨ ਮੰਤਰੀ ਆਵਾਸ ਯੋਜਨਾ - ਸ਼ਹਿਰੀ 2.0
+    department: HOUSING_URBAN
+    level: central
+    description: >-
+      Help for urban families without a pucca house to build or buy one.
+    benefits: >-
+      Up to Rs 2.5 lakh to build a house on your own land (economically weaker
+      section families), or a 4% interest subsidy on a home loan, up to Rs 1.80
+      lakh paid in five yearly instalments (loans sanctioned from 1 September
+      2024).
+    required_documents:
+      - Aadhaar card of family members
+      - Income certificate
+      - Bank account details
+      - Land documents (for building on your own land)
+    application_steps:
+      - Apply online on the PMAY-Urban portal, or through your municipal office.
+      - The application is verified and approved by the state.
+    application_mode: online or municipal office
+    official_url: https://pmay-urban.gov.in/
+    source_name: Press Information Bureau, Government of India
+    source_url: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2043927
+    category_tags: [housing, urban]
+    keywords: [house, home loan, urban housing, awas, pmay, ਘਰ, ਮਕਾਨ, ਸ਼ਹਿਰੀ ਆਵਾਸ]
+    conditions:
+      - field: area
+        operator: eq
+        value: urban
+        description: You live in a city or town.
+      - field: owns_pucca_house
+        operator: eq
+        value: false
+        description: Your family (husband, wife, unmarried children) has no pucca house anywhere in India.
+      - field: income_band
+        operator: not_in
+        value: [above_10l]
+        description: >-
+          Your family's annual income is up to Rs 9 lakh (EWS up to Rs 3 lakh,
+          LIG Rs 3-6 lakh, MIG Rs 6-9 lakh).
+
+  - slug: ignwps
+    name: Indira Gandhi National Widow Pension Scheme
+    short_name: IGNWPS
+    name_pa: ਇੰਦਰਾ ਗਾਂਧੀ ਰਾਸ਼ਟਰੀ ਵਿਧਵਾ ਪੈਨਸ਼ਨ ਯੋਜਨਾ
+    department: RURAL_DEVELOPMENT
+    level: central
+    description: >-
+      Monthly pension for widows from below-poverty-line households, under the
+      National Social Assistance Programme.
+    benefits: >-
+      Central share of Rs 300 per month (Rs 500 from age 80). States add their
+      own amount; in Punjab see also the state's assistance for widows.
+    required_documents:
+      - Husband's death certificate
+      - Age proof
+      - BPL proof
+      - Bank account details
+    application_steps:
+      - Apply at your Gram Panchayat, municipal office or the district social welfare office.
+      - After verification, the pension is paid monthly into your bank account.
+    application_mode: Gram Panchayat / municipal / social welfare office
+    official_url: https://nsap.nic.in/
+    source_name: Press Information Bureau, Government of India
+    source_url: https://www.pib.gov.in/PressNoteDetails.aspx?ModuleId=3&NoteId=155928
+    category_tags: [pension, women]
+    keywords: [widow pension, vidhwa, ਵਿਧਵਾ ਪੈਨਸ਼ਨ, ਵਿਧਵਾ]
+    conditions:
+      - field: marital_status
+        operator: eq
+        value: widowed
+        description: You are a widow.
+      - field: age
+        operator: gte
+        value: 40
+        description: You are 40 or older.
+      - field: bpl
+        operator: eq
+        value: true
+        description: Your household is below the poverty line (BPL).
+
+  - slug: igndps
+    name: Indira Gandhi National Disability Pension Scheme
+    short_name: IGNDPS
+    name_pa: ਇੰਦਰਾ ਗਾਂਧੀ ਰਾਸ਼ਟਰੀ ਦਿਵਿਆਂਗਤਾ ਪੈਨਸ਼ਨ ਯੋਜਨਾ
+    department: RURAL_DEVELOPMENT
+    level: central
+    description: >-
+      Monthly pension for people with severe or multiple disabilities from
+      below-poverty-line households.
+    benefits: >-
+      Central share of Rs 300 per month (Rs 500 from age 80). States add their
+      own amount; in Punjab see also the state's assistance for persons with
+      disabilities.
+    required_documents:
+      - Disability certificate
+      - Age proof
+      - BPL proof
+      - Bank account details
+    application_steps:
+      - Apply at your Gram Panchayat, municipal office or the district social welfare office.
+      - After verification, the pension is paid monthly into your bank account.
+    application_mode: Gram Panchayat / municipal / social welfare office
+    official_url: https://nsap.nic.in/
+    source_name: Press Information Bureau, Government of India
+    source_url: https://www.pib.gov.in/PressNoteDetails.aspx?ModuleId=3&NoteId=155928
+    category_tags: [pension, disability]
+    keywords: [disability pension, divyang, viklang, ਦਿਵਿਆਂਗ ਪੈਨਸ਼ਨ, ਅਪੰਗ]
+    conditions:
+      - field: severe_disability
+        operator: eq
+        value: true
+        description: You have a severe or multiple disability.
+      - field: age
+        operator: gte
+        value: 18
+        description: You are 18 or older.
+      - field: bpl
+        operator: eq
+        value: true
+        description: Your household is below the poverty line (BPL).
+
+  - slug: nfbs
+    name: National Family Benefit Scheme
+    short_name: NFBS
+    name_pa: ਰਾਸ਼ਟਰੀ ਪਰਿਵਾਰ ਲਾਭ ਯੋਜਨਾ
+    department: RURAL_DEVELOPMENT
+    level: central
+    description: >-
+      One-time help for a poor family when its main earning member dies.
+    benefits: A lump sum of Rs 20,000 to the family.
+    required_documents:
+      - Death certificate of the earning member
+      - Age proof of the deceased
+      - BPL proof
+      - Bank account details of the applicant
+    application_steps:
+      - Apply at your Gram Panchayat, municipal office or the district social welfare office.
+      - After verification, the amount is paid into the bank account of the family member who applied.
+    application_mode: Gram Panchayat / municipal / social welfare office
+    official_url: https://nsap.nic.in/
+    source_name: Press Information Bureau, Government of India
+    source_url: https://www.pib.gov.in/PressNoteDetails.aspx?ModuleId=3&NoteId=155928
+    category_tags: [family, death-assistance]
+    keywords: [death of breadwinner, family benefit, earning member died, ਪਰਿਵਾਰ ਲਾਭ, ਮੌਤ, ਕਮਾਊ ਮੈਂਬਰ]
+    conditions:
+      - field: breadwinner_died
+        operator: eq
+        value: true
+        description: The family's main earning member has died, aged between 18 and 59.
+      - field: bpl
+        operator: eq
+        value: true
+        description: The household is below the poverty line (BPL).
+
+  - slug: pmmvy
+    name: Pradhan Mantri Matru Vandana Yojana
+    short_name: PMMVY
+    name_pa: ਪ੍ਰਧਾਨ ਮੰਤਰੀ ਮਾਤ੍ਰ ਵੰਦਨਾ ਯੋਜਨਾ
+    department: WCD
+    level: central
+    description: >-
+      Cash help for pregnant women and new mothers from disadvantaged
+      backgrounds, for the first child and for a second child if it is a girl.
+    benefits: >-
+      Rs 5,000 in two instalments for the first child; Rs 6,000 in one
+      instalment after the birth of a second child who is a girl. Paid into
+      your bank or post office account.
+    required_documents:
+      - Aadhaar card
+      - Mother and Child Protection (MCP) card
+      - Bank or post office account details
+    application_steps:
+      - Register through your Anganwadi worker or ASHA, or on the PMMVY portal.
+      - The instalments are paid after the required health check-ups and, for the second girl child, after the birth.
+    application_mode: Anganwadi / ASHA / online
+    official_url: https://pmmvy.wcd.gov.in/
+    source_name: Press Information Bureau, Government of India
+    source_url: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2270668
+    category_tags: [women, maternity, health]
+    keywords: [pregnancy, pregnant, maternity benefit, mother, ਗਰਭਵਤੀ, ਜਣੇਪਾ, ਮਾਂ]
+    conditions:
+      - field: gender
+        operator: eq
+        value: female
+        description: The applicant is a woman.
+      - field: pregnant_or_new_mother
+        operator: eq
+        value: true
+        description: You are pregnant or recently gave birth (first child, or a second child who is a girl).
+      - field: govt_or_psu_employee
+        operator: eq
+        value: false
+        description: You are not in regular employment with the Central or State Government or a public sector undertaking.
+
+  - slug: jsy
+    name: Janani Suraksha Yojana
+    short_name: JSY
+    name_pa: ਜਨਨੀ ਸੁਰੱਖਿਆ ਯੋਜਨਾ
+    department: HEALTH_FW
+    level: central
+    description: >-
+      Cash help for safe delivery in a hospital, under the National Health
+      Mission.
+    benefits: >-
+      In Punjab: Rs 700 (rural) or Rs 600 (urban) for delivery in a government
+      hospital or accredited private hospital. Rs 500 for a home delivery
+      (BPL women aged 19 and above). Paid into your Aadhaar-linked bank
+      account.
+    required_documents:
+      - Aadhaar-linked bank account
+      - BPL or SC/ST certificate
+      - Mother and Child Protection (MCP) card
+    application_steps:
+      - Register your pregnancy with your ASHA worker or at a government health centre.
+      - Deliver at a government or accredited hospital; the amount is paid after delivery.
+    application_mode: ASHA / government health centre
+    official_url: https://nhm.gov.in/
+    source_name: National Health Mission, Ministry of Health & Family Welfare
+    source_url: https://nhm.gov.in/index1.php?lang=1&level=3&lid=309&sublinkid=841
+    category_tags: [women, maternity, health]
+    keywords: [delivery, institutional delivery, pregnancy, janani suraksha, ਜਣੇਪਾ, ਡਿਲੀਵਰੀ, ਗਰਭਵਤੀ]
+    conditions:
+      - field: gender
+        operator: eq
+        value: female
+        description: The applicant is a pregnant woman.
+      - field: social_category
+        operator: in
+        value: [sc, st]
+        group: poverty
+        description: You are Scheduled Caste or Scheduled Tribe.
+      - field: bpl
+        operator: eq
+        value: true
+        group: poverty
+        description: Or your household is below the poverty line (BPL).
+
+  - slug: pmgkay
+    name: Free Foodgrains under PM Garib Kalyan Anna Yojana (NFSA)
+    short_name: PMGKAY
+    name_pa: ਪ੍ਰਧਾਨ ਮੰਤਰੀ ਗ਼ਰੀਬ ਕਲਿਆਣ ਅੰਨ ਯੋਜਨਾ (ਮੁਫ਼ਤ ਰਾਸ਼ਨ)
+    department: FOOD
+    level: central
+    description: >-
+      Free foodgrains every month for ration card holders under the National
+      Food Security Act, for five years from 1 January 2024.
+    benefits: >-
+      Free foodgrains: 35 kg per month per Antyodaya (AAY) household, and 5 kg
+      per person per month for priority households.
+    required_documents:
+      - Ration card (NFSA, Antyodaya or priority household)
+      - Aadhaar card
+    application_steps:
+      - Collect your grain from your fair price (ration) shop with your ration card.
+      - To get a ration card, apply at your district Food & Civil Supplies office.
+    application_mode: ration shop
+    official_url: https://dfpd.gov.in/
+    source_name: Press Information Bureau, Government of India
+    source_url: https://www.pib.gov.in/PressReleasePage.aspx?PRID=1980689
+    category_tags: [food, ration]
+    keywords: [ration, free ration, wheat, atta, food grain, depot, ਰਾਸ਼ਨ, ਮੁਫ਼ਤ ਰਾਸ਼ਨ, ਕਣਕ, ਡਿਪੂ]
+    conditions:
+      - field: nfsa_ration_card
+        operator: eq
+        value: true
+        description: Your family has an NFSA ration card (Antyodaya or priority household).
+
+  - slug: e-shram
+    name: e-Shram Card (National Database of Unorganised Workers)
+    short_name: e-Shram
+    name_pa: ਈ-ਸ਼੍ਰਮ ਕਾਰਡ
+    department: LABOUR
+    level: central
+    description: >-
+      Free registration for unorganised workers, giving a Universal Account
+      Number (e-Shram card) used to reach social security schemes.
+    benefits: >-
+      An e-Shram card with a Universal Account Number; registered workers can
+      be linked to social security and welfare schemes. Registration is free.
+    required_documents:
+      - Aadhaar card
+      - Mobile number (preferably linked to Aadhaar)
+      - Bank account details
+    application_steps:
+      - Register yourself on the e-Shram portal, through the UMANG app, or at a Common Service Centre (CSC).
+    application_mode: online / UMANG / CSC
+    official_url: https://eshram.gov.in/
+    source_name: Press Information Bureau, Government of India
+    source_url: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2086193
+    category_tags: [workers, registration]
+    keywords: [eshram, labour card, mazdoor card, unorganised worker, ਈ-ਸ਼੍ਰਮ, ਮਜ਼ਦੂਰ ਕਾਰਡ, ਕਿਰਤੀ]
+    conditions:
+      - field: unorganised_worker
+        operator: eq
+        value: true
+        description: You work in the unorganised sector (wage, home-based or self-employed).
+      - field: age
+        operator: gte
+        value: 16
+        description: You are 16 or older.
+      - field: epfo_esic_member_or_taxpayer
+        operator: eq
+        value: false
+        description: You are not an EPFO or ESIC member and do not pay income tax.
+
+  - slug: vb-g-ram-g
+    name: Viksit Bharat Guarantee for Rozgar and Ajeevika Mission (Gramin)
+    short_name: VB-G RAM G
+    name_pa: ਵਿਕਸਿਤ ਭਾਰਤ ਰੁਜ਼ਗਾਰ ਅਤੇ ਆਜੀਵਿਕਾ ਗਾਰੰਟੀ ਮਿਸ਼ਨ (ਗ੍ਰਾਮੀਣ)
+    department: RURAL_DEVELOPMENT
+    level: central
+    description: >-
+      Guaranteed paid work for rural households whose adult members want
+      unskilled manual work. It replaced MGNREGA from 1 July 2026.
+    benefits: >-
+      Up to 125 days of paid work per household per year. Work must be given
+      within 15 days of asking, or an unemployment allowance is paid. Wages are
+      paid weekly, at the latest within 15 days. States may pause work for up
+      to 60 days a year in the peak farming season.
+    required_documents:
+      - Job card (MGNREGA job cards with completed e-KYC stay valid until new Gramin Rozgar Guarantee Cards are issued)
+      - Aadhaar card
+      - Bank account details
+    application_steps:
+      - Apply for work at your Gram Panchayat.
+      - Work should be given within 15 days; if not, you can claim the unemployment allowance.
+    application_mode: Gram Panchayat
+    official_url: https://rural.gov.in/
+    source_name: Press Information Bureau, Government of India
+    source_url: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2241357
+    category_tags: [employment, rural]
+    keywords: [nrega, mgnrega, narega, job card, rozgar, rural job, ਨਰੇਗਾ, ਮਨਰੇਗਾ, ਰੁਜ਼ਗਾਰ, ਜੌਬ ਕਾਰਡ, ਦਿਹਾੜੀ]
+    conditions:
+      - field: area
+        operator: eq
+        value: rural
+        description: You live in a rural area (village).
+      - field: age
+        operator: gte
+        value: 18
+        description: You are an adult willing to do unskilled manual work.
+
+  - slug: pm-yasasvi-pre-matric-obc
+    name: PM-YASASVI Pre-Matric Scholarship for OBC, EBC and DNT Students
+    name_pa: ਪੀਐਮ-ਯਸ਼ਸਵੀ ਪ੍ਰੀ-ਮੈਟ੍ਰਿਕ ਵਜ਼ੀਫ਼ਾ (ਓਬੀਸੀ, ਈਬੀਸੀ, ਡੀਐਨਟੀ)
+    department: SOCIAL_JUSTICE
+    level: central
+    description: >-
+      Scholarship for Backward Class, economically backward and denotified
+      tribe students in Classes 9 and 10 at government schools.
+    benefits: Rs 4,000 per year as academic allowance.
+    required_documents:
+      - Caste certificate
+      - Income certificate
+      - Aadhaar-linked bank account
+    application_steps:
+      - Apply through your school as per the Punjab scholarship schedule.
+    application_mode: through school
+    official_url: https://scholarships.punjab.gov.in/
+    source_name: Department of Social Justice, Empowerment & Minorities, Punjab (schemes brochure 2026)
+    source_url: https://welfare.punjab.gov.in/Static/PDF/Publications/SJEMPUNJAB.pdf
+    category_tags: [education, scholarship]
+    keywords: [scholarship, obc scholarship, class 9, class 10, ਵਜ਼ੀਫ਼ਾ, ਪਛੜੀਆਂ ਸ਼੍ਰੇਣੀਆਂ]
+    conditions:
+      - field: social_category
+        operator: eq
+        value: obc
+        description: The student is OBC, EBC or DNT.
+      - field: income_band
+        operator: in
+        value: [below_1l, 1l_to_2.5l]
+        description: The parents' annual income is Rs 2.5 lakh or less.
+      - field: studying_class_9_or_10_govt_school
+        operator: eq
+        value: true
+        description: The student is in Class 9 or 10 at a government school and gets no other scholarship.
+
+  - slug: post-matric-obc
+    name: Post Matric Scholarship for OBC, EBC and DNT Students (Punjab)
+    name_pa: ਓਬੀਸੀ, ਈਬੀਸੀ ਅਤੇ ਡੀਐਨਟੀ ਵਿਦਿਆਰਥੀਆਂ ਲਈ ਪੋਸਟ ਮੈਟ੍ਰਿਕ ਵਜ਼ੀਫ਼ਾ
+    department: SOCIAL_JUSTICE
+    level: central
+    description: >-
+      Scholarship for Backward Class, economically backward and denotified
+      tribe students of Punjab studying after Class 10, from government or
+      private institutions in India.
+    benefits: >-
+      Yearly support by course group: degree/postgraduate professional courses
+      Rs 20,000 (Rs 10,000 allowance + Rs 10,000 fees); other professional
+      courses Rs 13,000; other graduate and postgraduate courses Rs 8,000;
+      Class 11-12 and other post-matric non-degree courses Rs 5,000. Freeship
+      card at admission.
+    required_documents:
+      - Caste certificate
+      - Income certificate
+      - Residence certificate (Punjab)
+      - Aadhaar-seeded bank account
+    application_steps:
+      - Apply on the Dr. Ambedkar Scholarship Portal (scholarships.punjab.gov.in).
+      - Renewal students are paid first, then new students, depending on funds.
+    application_mode: online
+    official_url: https://scholarships.punjab.gov.in/
+    source_name: Department of Social Justice, Empowerment & Minorities, Punjab (schemes brochure 2026)
+    source_url: https://welfare.punjab.gov.in/Static/PDF/Publications/SJEMPUNJAB.pdf
+    category_tags: [education, scholarship]
+    keywords: [scholarship, obc scholarship, college, bc students, ਵਜ਼ੀਫ਼ਾ, ਪਛੜੀਆਂ ਸ਼੍ਰੇਣੀਆਂ, ਕਾਲਜ]
+    conditions:
+      - field: social_category
+        operator: eq
+        value: obc
+        description: The student is OBC, EBC or DNT and a permanent resident of Punjab.
+      - field: income_band
+        operator: in
+        value: [below_1l, 1l_to_2.5l]
+        description: The parents' annual income is Rs 2.5 lakh or less.
+      - field: studying_post_matric
+        operator: eq
+        value: true
+        description: The student is studying in Class 11 or above (after Class 10).
+
+  - slug: pre-matric-sc
+    name: Pre-Matric Scholarship for SC Students
+    name_pa: ਅਨੁਸੂਚਿਤ ਜਾਤੀ ਵਿਦਿਆਰਥੀਆਂ ਲਈ ਪ੍ਰੀ-ਮੈਟ੍ਰਿਕ ਵਜ਼ੀਫ਼ਾ
+    department: SOCIAL_JUSTICE
+    level: central
+    description: >-
+      Scholarship for Scheduled Caste students in Classes 9 and 10. Run in
+      Punjab by the School Education Department.
+    benefits: Rs 3,500 per year for day scholars, Rs 7,000 per year for hostellers.
+    required_documents:
+      - Caste certificate (SC)
+      - Income certificate
+      - Aadhaar-linked bank account
+    application_steps:
+      - Apply through your school.
+    application_mode: through school
+    official_url: https://scholarships.punjab.gov.in/
+    source_name: Department of Social Justice, Empowerment & Minorities, Punjab (schemes brochure 2026)
+    source_url: https://welfare.punjab.gov.in/Static/PDF/Publications/SJEMPUNJAB.pdf
+    category_tags: [education, scholarship]
+    keywords: [scholarship, sc scholarship, class 9, class 10, school, ਵਜ਼ੀਫ਼ਾ, ਅਨੁਸੂਚਿਤ ਜਾਤੀ, ਸਕੂਲ]
+    conditions:
+      - field: social_category
+        operator: eq
+        value: sc
+        description: The student belongs to a Scheduled Caste.
+      - field: income_band
+        operator: in
+        value: [below_1l, 1l_to_2.5l]
+        description: The parents' annual income is Rs 2.5 lakh or less.
+      - field: studying_class_9_or_10
+        operator: eq
+        value: true
+        description: The student is in Class 9 or 10.

@@ -23,7 +23,7 @@ from sqlalchemy.orm import selectinload
 from app.core.config import settings
 from app.core.errors import APIError
 from app.core.logging import get_logger
-from app.integrations import llm
+from app.integrations import llm, websearch
 from app.integrations.llm import LLMError, LLMMessage
 from app.models.citizen_profile import CitizenProfile
 from app.models.conversation import (
@@ -42,9 +42,10 @@ from app.schemas.assistant import (
     ConversationOut,
     ConversationSummaryOut,
     MessageOut,
+    OfficialWebOut,
     SchemeCardOut,
 )
-from app.services import voice_service
+from app.services import official_search, scheme_search, voice_service
 from app.services.grievance_service import DRAFT_FIELD_LIMITS
 
 logger = get_logger(__name__)
@@ -185,6 +186,17 @@ RESPONSE_SCHEMA: dict[str, Any] = {
     ],
 }
 
+# What to say when the scheme data has no answer (SYSTEM_PROMPT's {not_in_data_rule}).
+NOT_IN_DATA_WITH_SEARCH = (
+    "say in ONE short sentence that it is not in your verified scheme list. The\n"
+    "  system then checks official government websites by itself: do not mention\n"
+    "  offices, websites or other next steps, and do not ask a follow-up question."
+)
+NOT_IN_DATA_NO_SEARCH = (
+    "say so plainly, and point the citizen to the\n"
+    "  official channel or their local government office."
+)
+
 SYSTEM_PROMPT = """\
 You are CitizenDesk AI, a government help assistant for citizens in Punjab, India.
 You do exactly two things:
@@ -195,8 +207,7 @@ You do exactly two things:
 STRICT RULES
 - Use ONLY the SCHEME DATA. Never invent schemes, amounts, deadlines, documents,
   steps, phone numbers or links. If the data does not answer the question, set
-  answer_status "not_in_data", say so plainly, and point the citizen to the
-  official channel or their local government office.
+  answer_status "not_in_data" and {not_in_data_rule}
 - Never write URLs. Official links are attached by the system.
 - You cannot browse the internet. If asked to search online, check the web or
   give the "latest" schemes, say so in ONE short sentence (you answer from
@@ -391,6 +402,8 @@ def message_out(message: ConversationMessage) -> MessageOut:
         schemes=[SchemeCardOut.model_validate(s) for s in payload.get("schemes", [])],
         follow_ups=payload.get("follow_ups", []),
         grievance_ready=bool(payload.get("grievance_ready")),
+        official_search=payload.get("official_search"),
+        web=OfficialWebOut.model_validate(payload["web"]) if payload.get("web") else None,
     )
 
 
@@ -527,15 +540,15 @@ async def post_message(
         .where(CitizenProfile.user_id == user.id)
         .options(selectinload(CitizenProfile.district), selectinload(CitizenProfile.tehsil))
     )
-    schemes = list(
-        (
-            await db.scalars(
-                select(Scheme)
-                .where(Scheme.is_active.is_(True))
-                .options(selectinload(Scheme.conditions), selectinload(Scheme.department))
-                .order_by(Scheme.name)
-            )
-        ).all()
+    # The schemes the model sees: all of them while the list is small, otherwise
+    # a shortlist by meaning (the question plus recent messages, for follow-ups).
+    recent = [m.content for m in history if m.role == MessageRole.citizen.value][-2:]
+    schemes = await scheme_search.shortlist(
+        db,
+        query="\n".join([*recent, text]),
+        discussed=await scheme_search.discussed_scheme_ids(db, conversation.id)
+        if conversation_id is not None
+        else None,
     )
     known = {s.slug: s for s in schemes}
     categories = list(
@@ -551,7 +564,12 @@ async def post_message(
     category_codes = {c.code for c in categories} | {s.code for c in categories for s in c.children}
 
     language_name = LANGUAGE_NAMES.get(language, "English")
-    system = SYSTEM_PROMPT.format(language=language_name)
+    system = SYSTEM_PROMPT.format(
+        language=language_name,
+        not_in_data_rule=NOT_IN_DATA_WITH_SEARCH
+        if websearch.is_enabled()
+        else NOT_IN_DATA_NO_SEARCH,
+    )
     context_block = json.dumps(
         {
             "CITIZEN PROFILE (self-declared)": _profile_context(user, profile),
@@ -624,6 +642,16 @@ async def post_message(
     follow_ups = _str_list(data.get("follow_ups"))[:MAX_FOLLOW_UPS]
     reply = str(data.get("reply") or "").strip()
     reply = reply or FALLBACK_REPLY.get(language, FALLBACK_REPLY["en"])
+    # Not in the verified list: the app now searches official government websites
+    # (POST .../official-search) and shows a "checking" animation meanwhile.
+    official_pending = (
+        not failed
+        and status == AnswerStatus.not_in_data.value
+        and mode != ConversationMode.grievance_intake.value
+        and websearch.is_enabled()
+    )
+    if official_pending:
+        reply = f"{reply} {official_search.checking_text(language)}"
 
     assistant_msg = ConversationMessage(
         conversation_id=conversation.id,
@@ -632,7 +660,11 @@ async def post_message(
         language=language,
         payload=None
         if failed
-        else {"schemes": [c.model_dump() for c in cards], "follow_ups": follow_ups},
+        else {
+            "schemes": [c.model_dump() for c in cards],
+            "follow_ups": [] if official_pending else follow_ups,
+            **({"official_search": "pending"} if official_pending else {}),
+        },
         detected_mode=mode,
         answer_status=status,
         llm_model=result.model if result else None,

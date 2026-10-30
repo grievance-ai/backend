@@ -13,6 +13,7 @@ from app.api.v2.resource import (
     otp,
     phones,
     profiles,
+    schemes,
     staff,
     users,
 )
@@ -29,4 +30,5 @@ resource_router.include_router(data_storage.router)
 resource_router.include_router(conversations.router)
 resource_router.include_router(citizen_profile.router)
 resource_router.include_router(grievances.router)
+resource_router.include_router(schemes.router)
 resource_router.include_router(staff.router)

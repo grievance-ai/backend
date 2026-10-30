@@ -51,6 +51,18 @@ class SchemeCardOut(BaseModel):
     contact: str | None
 
 
+class WebSourceOut(BaseModel):
+    url: str  # an official government page (allowlisted domain)
+    title: str  # its site name / domain
+
+
+class OfficialWebOut(BaseModel):
+    """An answer found on official government websites, not yet verified by us."""
+
+    found: bool
+    sources: list[WebSourceOut] = []
+
+
 class MessageOut(BaseModel):
     id: uuid.UUID
     role: Literal["citizen", "assistant"]
@@ -63,6 +75,12 @@ class MessageOut(BaseModel):
     follow_ups: list[str] = []
     # The assistant has a complete grievance draft: show "Review & register".
     grievance_ready: bool = False
+    # "pending": the scheme is not in our list and the app should now call
+    # POST /conversations/messages/{id}/official-search (showing a "checking
+    # official websites" animation). "done": that search has run.
+    official_search: Literal["pending", "done"] | None = None
+    # Set on the message that carries an official-website answer.
+    web: OfficialWebOut | None = None
 
 
 class ChatTurnOut(BaseModel):

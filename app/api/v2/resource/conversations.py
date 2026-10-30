@@ -17,10 +17,11 @@ from app.schemas.assistant import (
     ConversationOut,
     ConversationSummaryOut,
     Lang,
+    MessageOut,
     TranscriptionOut,
 )
 from app.schemas.common import Envelope
-from app.services import assistant_service, live_voice, voice_service
+from app.services import assistant_service, live_voice, official_search, voice_service
 
 router = APIRouter()
 
@@ -89,6 +90,25 @@ async def get_conversation(
     return Envelope[ConversationOut](
         data=await assistant_service.get_conversation(db, user, conversation_id)
     )
+
+
+@router.post(
+    "/conversations/messages/{message_id}/official-search", response_model=Envelope[MessageOut]
+)
+@limiter.limit(settings.rate_limit_websearch)
+async def search_official_websites(
+    request: Request,
+    message_id: uuid.UUID,
+    user: User = Depends(authorized_user),
+    db: AsyncSession = Depends(get_db),
+    redis_client: redis.Redis = Depends(get_redis),
+) -> Envelope[MessageOut]:
+    """For a reply marked ``official_search: "pending"`` (the scheme is not in the
+    verified list): search official government websites and add the answer, or a
+    "not found" reply, to the conversation. Takes several seconds; repeat calls
+    return the same message."""
+    data = await official_search.run(db, redis_client, user, message_id)
+    return Envelope[MessageOut](data=data)
 
 
 @router.post("/conversations/messages/{message_id}/speech")

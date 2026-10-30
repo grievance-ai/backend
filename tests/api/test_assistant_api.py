@@ -7,6 +7,7 @@ from typing import Any
 
 import pytest
 import pytest_asyncio
+from app.core.config import settings
 from app.integrations.llm import mock
 from app.integrations.llm.base import LLMError
 from app.models.conversation import ConversationMessage, MessageScheme, UnansweredQuestion
@@ -17,6 +18,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 NS = "/api/v2/xuanwu"
 SEND = f"{NS}/resource/conversations/messages"
+
+
+@pytest.fixture(autouse=True)
+def _send_every_scheme(monkeypatch: pytest.MonkeyPatch) -> None:
+    """These tests are about grounding, not search: send every scheme to the model,
+    however many the shared test database holds."""
+    monkeypatch.setattr(settings, "scheme_full_injection_limit", 100_000)
 
 
 @pytest_asyncio.fixture

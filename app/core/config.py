@@ -162,6 +162,26 @@ class Settings(BaseSettings):
     tts_voice: str = "Kore"  # Gemini prebuilt voice
     tts_max_chars: int = 1500  # longer replies are cut at a sentence end
 
+    # --- Scheme search (embeddings) ---
+    # Small knowledge bases are sent to the model whole; above this many active
+    # schemes the assistant first shortlists the relevant ones by meaning.
+    embedding_provider: str = ""  # "" = same as LLM_PROVIDER | mock | gemini
+    embedding_model: str = "gemini-embedding-2"  # multilingual: Punjabi query, English data
+    embedding_dimensions: int = 768
+    scheme_full_injection_limit: int = 25
+    scheme_shortlist_size: int = 12
+
+    # --- Official-website search (when a scheme is not in the verified list) ---
+    # Only answers backed by official Indian government pages are shown, labelled
+    # as not verified by us. Gemini's Google Search tool is used; the domain
+    # allowlist is enforced in our code (official_search.is_official).
+    websearch_provider: str = ""  # "" = same as LLM_PROVIDER | mock | gemini | none (off)
+    websearch_model: str = ""  # "" = LLM_MODEL
+    websearch_timeout_seconds: float = 15.0  # the citizen sees a "checking" animation meanwhile
+    websearch_cache_seconds: int = 86400  # same question, same language: reuse for a day
+    # Hostname suffixes that count as official. Anything else is dropped.
+    websearch_allowed_domains: str = "gov.in,nic.in"
+
     # --- Captcha ---
     captcha_provider: str = "none"  # none | recaptcha
     recaptcha_secret: str = ""
@@ -173,6 +193,7 @@ class Settings(BaseSettings):
     rate_limit_login: str = "10/minute"  # extra ceiling on the login endpoint
     rate_limit_voice: str = "20/minute"  # speech-to-text is a paid call per clip
     rate_limit_speech: str = "30/minute"  # text-to-speech, likewise
+    rate_limit_websearch: str = "10/minute"  # official-website search, a paid call
     hsts_enabled: bool = False  # send Strict-Transport-Security (set True behind HTTPS)
 
     @property
@@ -182,6 +203,22 @@ class Settings(BaseSettings):
     @property
     def tts_provider_name(self) -> str:
         return (self.tts_provider or self.llm_provider).lower()
+
+    @property
+    def embedding_provider_name(self) -> str:
+        return (self.embedding_provider or self.llm_provider).lower()
+
+    @property
+    def websearch_provider_name(self) -> str:
+        return (self.websearch_provider or self.llm_provider).lower()
+
+    @property
+    def websearch_allowed_suffixes(self) -> list[str]:
+        return [
+            d.strip().lower().lstrip(".")
+            for d in self.websearch_allowed_domains.split(",")
+            if d.strip()
+        ]
 
     @property
     def cors_origins_list(self) -> list[str]:
