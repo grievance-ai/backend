@@ -1,0 +1,41 @@
+# Demo officer and administrator accounts for the prototype (spec §3, §10 scenes 4-5).
+# Log in on the normal login screen with the mobile number and OTP 1111.
+# Loaded by: python -m app.console seed-demo-staff (runs on every `up`; skipped in production).
+# Existing accounts keep their role; a number already used by a citizen is skipped.
+#
+# scope_level: tehsil | district | state | system. No department = all departments.
+
+staff:
+  - mobile: "9999900001"
+    name: Harpreet Kaur
+    role: officer
+    designation: Grievance Officer, Ludhiana
+    scope_level: district
+    district: LDH
+
+  - mobile: "9999900002"
+    name: Gurpreet Singh
+    role: officer
+    designation: Grievance Officer, Mohali
+    scope_level: district
+    district: SAS
+
+  - mobile: "9999900003"
+    name: Amandeep Sandhu
+    role: officer
+    designation: SDO, Water Supply & Sanitation, Amritsar
+    scope_level: district
+    district: ASR
+    department: PB_WSS
+
+  - mobile: "9999900009"
+    name: Navjot Gill
+    role: admin
+    designation: State Administrator, Punjab
+    scope_level: state
+
+  - mobile: "9999900000"
+    name: System Administrator
+    role: superadmin
+    designation: System Administrator
+    scope_level: system

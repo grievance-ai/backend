@@ -1,0 +1,29 @@
+# Punjab's 23 districts (citizen profile "district" and officer jurisdictions).
+# Loaded by: docker compose run --rm api python -m app.console seed-knowledge
+# Tehsils can be added per district later under `tehsils:`.
+
+state_code: PB
+districts:
+  - { code: ASR, name_en: Amritsar, name_pa: ਅੰਮ੍ਰਿਤਸਰ }
+  - { code: BNL, name_en: Barnala, name_pa: ਬਰਨਾਲਾ }
+  - { code: BTI, name_en: Bathinda, name_pa: ਬਠਿੰਡਾ }
+  - { code: FDK, name_en: Faridkot, name_pa: ਫ਼ਰੀਦਕੋਟ }
+  - { code: FGS, name_en: Fatehgarh Sahib, name_pa: ਫ਼ਤਹਿਗੜ੍ਹ ਸਾਹਿਬ }
+  - { code: FZK, name_en: Fazilka, name_pa: ਫ਼ਾਜ਼ਿਲਕਾ }
+  - { code: FZR, name_en: Ferozepur, name_pa: ਫ਼ਿਰੋਜ਼ਪੁਰ }
+  - { code: GSP, name_en: Gurdaspur, name_pa: ਗੁਰਦਾਸਪੁਰ }
+  - { code: HSP, name_en: Hoshiarpur, name_pa: ਹੁਸ਼ਿਆਰਪੁਰ }
+  - { code: JAL, name_en: Jalandhar, name_pa: ਜਲੰਧਰ }
+  - { code: KPT, name_en: Kapurthala, name_pa: ਕਪੂਰਥਲਾ }
+  - { code: LDH, name_en: Ludhiana, name_pa: ਲੁਧਿਆਣਾ }
+  - { code: MLK, name_en: Malerkotla, name_pa: ਮਾਲੇਰਕੋਟਲਾ }
+  - { code: MNS, name_en: Mansa, name_pa: ਮਾਨਸਾ }
+  - { code: MOG, name_en: Moga, name_pa: ਮੋਗਾ }
+  - { code: PTK, name_en: Pathankot, name_pa: ਪਠਾਨਕੋਟ }
+  - { code: PTA, name_en: Patiala, name_pa: ਪਟਿਆਲਾ }
+  - { code: RPR, name_en: Rupnagar, name_pa: ਰੂਪਨਗਰ }
+  - { code: SAS, name_en: "Sahibzada Ajit Singh Nagar (Mohali)", name_pa: ਸਾਹਿਬਜ਼ਾਦਾ ਅਜੀਤ ਸਿੰਘ ਨਗਰ (ਮੋਹਾਲੀ) }
+  - { code: SGR, name_en: Sangrur, name_pa: ਸੰਗਰੂਰ }
+  - { code: SBS, name_en: "Shaheed Bhagat Singh Nagar (Nawanshahr)", name_pa: ਸ਼ਹੀਦ ਭਗਤ ਸਿੰਘ ਨਗਰ (ਨਵਾਂਸ਼ਹਿਰ) }
+  - { code: MKS, name_en: Sri Muktsar Sahib, name_pa: ਸ੍ਰੀ ਮੁਕਤਸਰ ਸਾਹਿਬ }
+  - { code: TTN, name_en: Tarn Taran, name_pa: ਤਰਨ ਤਾਰਨ }

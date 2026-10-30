@@ -1,0 +1,7 @@
+# Coarse allow/deny rules checked before the per-role permission table.
+# - block: request paths beginning with any of these prefixes are always denied
+# - pass:  request paths beginning with any of these prefixes skip the table
+#          (use sparingly; most access is decided by the permissions table)
+
+pass: []
+block: []

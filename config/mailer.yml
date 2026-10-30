@@ -1,0 +1,29 @@
+# Transactional email registry — ported from nebryx's mailer config
+# (src/services/email + templates/email/*.{lang}.html), consumed by app/emails.
+#
+# Each event maps an event key to per-language template + subject. The worker
+# renders templates[language] || templates.en (English fallback).
+events:
+  - key: email_confirmation
+    templates:
+      en:
+        template_path: email_confirmation.en.html
+        subject: Confirm your Rare Vintage email
+
+  - key: password_reset
+    templates:
+      en:
+        template_path: password_reset.en.html
+        subject: Reset your Rare Vintage password
+
+  - key: session_create
+    templates:
+      en:
+        template_path: session_create.en.html
+        subject: New sign-in to your Rare Vintage account
+
+  - key: label
+    templates:
+      en:
+        template_path: label.en.html
+        subject: Your Rare Vintage account was updated

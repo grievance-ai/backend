@@ -1,0 +1,125 @@
+# Grievance categories → the Punjab department each one is routed to.
+# Loaded by: docker compose run --rm api python -m app.console seed-knowledge
+#
+# sla_days are PROTOTYPE ASSUMPTIONS (they set each grievance's due date), not
+# official service-level commitments. Adjust them with the departments.
+# A category without `department` is routed by district only.
+
+departments:
+  - code: PB_WSS
+    name_en: Department of Water Supply & Sanitation, Punjab
+    name_pa: ਜਲ ਸਪਲਾਈ ਅਤੇ ਸੈਨੀਟੇਸ਼ਨ ਵਿਭਾਗ, ਪੰਜਾਬ
+  - code: PSPCL
+    name_en: Punjab State Power Corporation Limited (PSPCL)
+    name_pa: ਪੰਜਾਬ ਰਾਜ ਬਿਜਲੀ ਨਿਗਮ ਲਿਮਿਟਡ (PSPCL)
+  - code: PB_PWD
+    name_en: Public Works Department (B&R), Punjab
+    name_pa: ਲੋਕ ਨਿਰਮਾਣ ਵਿਭਾਗ (ਭਵਨ ਤੇ ਮਾਰਗ), ਪੰਜਾਬ
+  - code: PB_LG
+    name_en: Department of Local Government, Punjab
+    name_pa: ਸਥਾਨਕ ਸਰਕਾਰਾਂ ਵਿਭਾਗ, ਪੰਜਾਬ
+  - code: PB_RDP
+    name_en: Department of Rural Development & Panchayats, Punjab
+    name_pa: ਪੇਂਡੂ ਵਿਕਾਸ ਅਤੇ ਪੰਚਾਇਤ ਵਿਭਾਗ, ਪੰਜਾਬ
+  - code: PB_SOCIAL
+    name_en: Department of Social Security, Women & Child Development, Punjab
+    name_pa: ਸਮਾਜਿਕ ਸੁਰੱਖਿਆ, ਇਸਤਰੀ ਅਤੇ ਬਾਲ ਵਿਕਾਸ ਵਿਭਾਗ, ਪੰਜਾਬ
+  - code: PB_FOOD
+    name_en: Department of Food, Civil Supplies & Consumer Affairs, Punjab
+    name_pa: ਖੁਰਾਕ, ਸਿਵਲ ਸਪਲਾਈ ਅਤੇ ਖਪਤਕਾਰ ਮਾਮਲੇ ਵਿਭਾਗ, ਪੰਜਾਬ
+  - code: PB_HEALTH
+    name_en: Department of Health & Family Welfare, Punjab
+    name_pa: ਸਿਹਤ ਅਤੇ ਪਰਿਵਾਰ ਭਲਾਈ ਵਿਭਾਗ, ਪੰਜਾਬ
+  - code: PB_EDU
+    name_en: Department of School Education, Punjab
+    name_pa: ਸਕੂਲ ਸਿੱਖਿਆ ਵਿਭਾਗ, ਪੰਜਾਬ
+  - code: PB_REVENUE
+    name_en: Department of Revenue, Rehabilitation & Disaster Management, Punjab
+    name_pa: ਮਾਲ, ਮੁੜ ਵਸੇਬਾ ਅਤੇ ਆਫ਼ਤ ਪ੍ਰਬੰਧਨ ਵਿਭਾਗ, ਪੰਜਾਬ
+
+categories:
+  - code: WATER
+    name_en: Water supply
+    name_pa: ਪਾਣੀ ਦੀ ਸਪਲਾਈ
+    department: PB_WSS
+    sla_days: 7
+    keywords: [water, tap, pipe, ਪਾਣੀ, ਟੂਟੀ, ਪਾਈਪ]
+    subcategories:
+      - { code: WATER_NO_SUPPLY, name_en: No water supply, name_pa: ਪਾਣੀ ਦੀ ਸਪਲਾਈ ਬੰਦ }
+      - { code: WATER_DIRTY, name_en: Dirty or contaminated water, name_pa: ਗੰਦਾ ਜਾਂ ਦੂਸ਼ਿਤ ਪਾਣੀ }
+      - { code: WATER_LEAK, name_en: Leaking or broken pipe, name_pa: ਪਾਈਪ ਲੀਕ ਜਾਂ ਟੁੱਟੀ }
+  - code: ELECTRICITY
+    name_en: Electricity
+    name_pa: ਬਿਜਲੀ
+    department: PSPCL
+    sla_days: 3
+    keywords: [electricity, power, light, bill, transformer, ਬਿਜਲੀ, ਬਿੱਲ, ਟ੍ਰਾਂਸਫਾਰਮਰ]
+    subcategories:
+      - { code: POWER_CUT, name_en: Power cut, name_pa: ਬਿਜਲੀ ਬੰਦ }
+      - { code: POWER_BILL, name_en: Wrong electricity bill, name_pa: ਗਲਤ ਬਿਜਲੀ ਬਿੱਲ }
+      - { code: POWER_HAZARD, name_en: Damaged pole or loose wire, name_pa: ਖਰਾਬ ਖੰਭਾ ਜਾਂ ਢਿੱਲੀ ਤਾਰ }
+  - code: ROADS
+    name_en: Roads & streetlights
+    name_pa: ਸੜਕਾਂ ਅਤੇ ਸਟ੍ਰੀਟ ਲਾਈਟਾਂ
+    department: PB_PWD
+    sla_days: 15
+    keywords: [road, pothole, streetlight, ਸੜਕ, ਟੋਏ, ਲਾਈਟ]
+    subcategories:
+      - { code: ROAD_DAMAGE, name_en: Damaged road or potholes, name_pa: ਟੁੱਟੀ ਸੜਕ ਜਾਂ ਟੋਏ }
+      - { code: STREETLIGHT, name_en: Streetlight not working, name_pa: ਸਟ੍ਰੀਟ ਲਾਈਟ ਖਰਾਬ }
+  - code: SANITATION
+    name_en: Sanitation & garbage
+    name_pa: ਸਫ਼ਾਈ ਅਤੇ ਕੂੜਾ
+    department: PB_LG
+    sla_days: 7
+    keywords: [garbage, sewer, drain, cleaning, ਕੂੜਾ, ਸੀਵਰ, ਨਾਲੀ, ਸਫ਼ਾਈ]
+    subcategories:
+      - { code: GARBAGE, name_en: Garbage not collected, name_pa: ਕੂੜਾ ਨਹੀਂ ਚੁੱਕਿਆ ਗਿਆ }
+      - { code: SEWER_BLOCKED, name_en: Sewer or drain blocked, name_pa: ਸੀਵਰ ਜਾਂ ਨਾਲੀ ਬੰਦ }
+  - code: PENSION
+    name_en: Pension
+    name_pa: ਪੈਨਸ਼ਨ
+    department: PB_SOCIAL
+    sla_days: 15
+    keywords: [pension, old age, widow, ਪੈਨਸ਼ਨ, ਬੁਢਾਪਾ, ਵਿਧਵਾ]
+    subcategories:
+      - { code: PENSION_STOPPED, name_en: Pension not received or stopped, name_pa: ਪੈਨਸ਼ਨ ਨਹੀਂ ਮਿਲੀ ਜਾਂ ਬੰਦ ਹੋ ਗਈ }
+  - code: RATION
+    name_en: Ration & ration card
+    name_pa: ਰਾਸ਼ਨ ਅਤੇ ਰਾਸ਼ਨ ਕਾਰਡ
+    department: PB_FOOD
+    sla_days: 10
+    keywords: [ration, depot, wheat, ration card, ਰਾਸ਼ਨ, ਡਿਪੂ, ਕਣਕ]
+    subcategories:
+      - { code: RATION_NOT_RECEIVED, name_en: Ration not received, name_pa: ਰਾਸ਼ਨ ਨਹੀਂ ਮਿਲਿਆ }
+      - { code: RATION_CARD, name_en: Ration card problem, name_pa: ਰਾਸ਼ਨ ਕਾਰਡ ਦੀ ਸਮੱਸਿਆ }
+  - code: SCHEME_BENEFIT
+    name_en: Scheme application or payment
+    name_pa: ਯੋਜਨਾ ਦੀ ਅਰਜ਼ੀ ਜਾਂ ਭੁਗਤਾਨ
+    sla_days: 15
+    keywords: [application, pending, payment, installment, ਅਰਜ਼ੀ, ਕਿਸ਼ਤ, ਭੁਗਤਾਨ]
+    subcategories:
+      - { code: APPLICATION_PENDING, name_en: Application pending too long, name_pa: ਅਰਜ਼ੀ ਲੰਬੇ ਸਮੇਂ ਤੋਂ ਲਟਕੀ ਹੋਈ }
+      - { code: PAYMENT_NOT_RECEIVED, name_en: Benefit payment not received, name_pa: ਲਾਭ ਦੀ ਰਕਮ ਨਹੀਂ ਮਿਲੀ }
+  - code: HEALTH
+    name_en: Health services
+    name_pa: ਸਿਹਤ ਸੇਵਾਵਾਂ
+    department: PB_HEALTH
+    sla_days: 10
+    keywords: [hospital, doctor, medicine, ਹਸਪਤਾਲ, ਡਾਕਟਰ, ਦਵਾਈ]
+  - code: EDUCATION
+    name_en: School & education
+    name_pa: ਸਕੂਲ ਅਤੇ ਸਿੱਖਿਆ
+    department: PB_EDU
+    sla_days: 15
+    keywords: [school, teacher, ਸਕੂਲ, ਅਧਿਆਪਕ]
+  - code: LAND
+    name_en: Land records & revenue
+    name_pa: ਜ਼ਮੀਨੀ ਰਿਕਾਰਡ ਅਤੇ ਮਾਲ
+    department: PB_REVENUE
+    sla_days: 21
+    keywords: [land, record, mutation, patwari, ਜ਼ਮੀਨ, ਇੰਤਕਾਲ, ਪਟਵਾਰੀ]
+  - code: OTHER
+    name_en: Other
+    name_pa: ਹੋਰ
+    sla_days: 15

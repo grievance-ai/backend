@@ -1,0 +1,31 @@
+# Production override for the Xuanwu auth server.
+#
+# Layer it on top of the base compose file:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Differences from dev: no source bind-mounts (the image is the source of
+# truth), no --reload, a real uvicorn worker pool, and no dev-only services
+# (mailhog / minio). Provide secrets and a real DB/Redis/SMTP via the
+# environment (APP_ENV=production, COOKIE_SECURE=true, HSTS_ENABLED=true, …).
+
+services:
+  mailhog:
+    profiles: ["dev-only"]  # excluded from the default prod run
+
+  minio:
+    profiles: ["dev-only"]
+
+  api:
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4 --proxy-headers
+    volumes: []
+    restart: unless-stopped
+
+  worker:
+    command: celery -A app.workers.celery_app:celery_app worker -l warning --concurrency=4
+    volumes: []
+    restart: unless-stopped
+
+  beat:
+    command: celery -A app.workers.celery_app:celery_app beat -l warning
+    volumes: []
+    restart: unless-stopped

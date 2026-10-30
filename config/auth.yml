@@ -1,0 +1,24 @@
+# Progressive-verification rules — ported from Barong's barong.yml
+# (exchange_auth/config/barong.yml), consumed by app/services/level_service.py.
+#
+# Levels themselves are the source of truth in the `levels` table (seeded by
+# app/db/seeds.py). A user's numeric level is the highest level whose
+# (key, value) the user holds as a private label — see User#update_level.
+
+# A user becomes `active` once their private labels are a superset of this hash.
+activation_requirements:
+  email: verified
+
+# State triggers: if any private label's KEY starts with one of these prefixes,
+# the user's state is set to the mapped value. Evaluated in order; the last
+# matching state wins (matching Barong's update_state). Codes/keys are matched
+# by prefix, so e.g. a label keyed `ban` or `ban-fraud` triggers `banned`.
+state_triggers:
+  banned:
+    - ban
+    - fraud
+  locked:
+    - suspicious
+    - lock
+  deleted:
+    - delete

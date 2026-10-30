@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# The whole toolchain runs inside the project image — same as local dev — so CI
+# and a developer's machine can never drift. Gates run in order:
+# lint → format → type → security → test → build (the image built up front is
+# the publishable artifact the gates run against).
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: xuanwu
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare environment
+        run: cp .env.example .env
+
+      - name: Build image
+        run: docker compose build api
+
+      - name: Lint (ruff)
+        run: docker compose run --rm --no-deps api ruff check .
+
+      - name: Format check (ruff)
+        run: docker compose run --rm --no-deps api ruff format --check .
+
+      - name: Type check (mypy --strict)
+        run: docker compose run --rm --no-deps api mypy
+
+      - name: Security (bandit + pip-audit)
+        # CVE-2025-65896 (asyncmy): no fixed release exists yet; tracked + accepted.
+        run: |
+          docker compose run --rm --no-deps api bandit -q -c pyproject.toml -r app
+          docker compose run --rm --no-deps api pip-audit --ignore-vuln CVE-2025-65896
+
+      - name: Migrate + test (pytest)
+        # `api` depends_on db + redis (healthchecked), so they start first.
+        run: docker compose run --rm api sh -c "alembic upgrade head && pytest -q"
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

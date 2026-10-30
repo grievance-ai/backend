@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block title %}Confirm your email{% endblock %}
+{% block preheader %}Confirm your email address to activate your Rare Vintage account.{% endblock %}
+{% block content %}
+  {{ ui.heading("Welcome to Rare Vintage") }}
+  {{ ui.paragraph("Please confirm your email address to activate your account and start exploring our cellar.") }}
+  {{ ui.button("Confirm email", confirmation_url) }}
+  {{ ui.paragraph("If the button does not work, copy and paste this link into your browser:") }}
+  <p style="margin:0; font-size:14px; word-break:break-all;">
+    <a href="{{ confirmation_url }}" style="color:#b8923e;">{{ confirmation_url }}</a>
+  </p>
+  {{ ui.fineprint("If you did not create a Rare Vintage account, you can safely ignore this email.") }}
+{% endblock %}

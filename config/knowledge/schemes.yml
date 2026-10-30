@@ -1,0 +1,275 @@
+# Scheme knowledge base — the ONLY source the assistant may answer from.
+#
+# STARTER SET, NOT YET VERIFIED. Every entry has `last_verified_on: null`.
+# Before the demo, check each one against its official_url, fix anything
+# outdated, then set last_verified_on to the date you checked it.
+#
+# Load / update (idempotent, upserts by slug):
+#   docker compose run --rm api python -m app.console seed-knowledge
+#
+# Eligibility conditions: `field` names that match a citizen profile attribute
+# (occupation, land_holding_acres, income_band, social_category, gender, age)
+# are checked against the profile; any other field (e.g. owns_pucca_house) is
+# asked for in the conversation. Conditions sharing a `group` are "any of".
+
+departments:
+  - code: AGRICULTURE
+    name_en: Ministry of Agriculture & Farmers Welfare
+    name_pa: ਖੇਤੀਬਾੜੀ ਅਤੇ ਕਿਸਾਨ ਭਲਾਈ ਮੰਤਰਾਲਾ
+  - code: RURAL_DEVELOPMENT
+    name_en: Ministry of Rural Development
+    name_pa: ਪੇਂਡੂ ਵਿਕਾਸ ਮੰਤਰਾਲਾ
+  - code: HEALTH
+    name_en: National Health Authority
+    name_pa: ਰਾਸ਼ਟਰੀ ਸਿਹਤ ਅਥਾਰਟੀ
+  - code: PETROLEUM
+    name_en: Ministry of Petroleum & Natural Gas
+    name_pa: ਪੈਟਰੋਲੀਅਮ ਅਤੇ ਕੁਦਰਤੀ ਗੈਸ ਮੰਤਰਾਲਾ
+  - code: SOCIAL_JUSTICE
+    name_en: Ministry of Social Justice & Empowerment
+    name_pa: ਸਮਾਜਿਕ ਨਿਆਂ ਅਤੇ ਅਧਿਕਾਰਤਾ ਮੰਤਰਾਲਾ
+
+schemes:
+  - slug: pm-kisan
+    name: Pradhan Mantri Kisan Samman Nidhi
+    short_name: PM-KISAN
+    name_pa: ਪ੍ਰਧਾਨ ਮੰਤਰੀ ਕਿਸਾਨ ਸਨਮਾਨ ਨਿਧੀ
+    department: AGRICULTURE
+    level: central
+    description: >-
+      Income support for landholding farmer families, paid directly into their
+      bank account.
+    benefits: >-
+      Rs 6,000 per year, paid in three equal instalments of Rs 2,000 directly to
+      the farmer's Aadhaar-linked bank account.
+    required_documents:
+      - Aadhaar card
+      - Land ownership records
+      - Aadhaar-linked bank account details
+    application_steps:
+      - Register on the PM-KISAN portal using "New Farmer Registration", or visit a Common Service Centre (CSC).
+      - Enter your Aadhaar, land and bank details.
+      - Your land records are verified by the state government.
+      - Complete eKYC (mandatory) to keep receiving instalments.
+    application_mode: online or CSC
+    official_url: https://pmkisan.gov.in/
+    contact: PM-KISAN helpline 155261
+    category_tags: [agriculture, income-support]
+    keywords: [farmer, kisan, agriculture, income, ਕਿਸਾਨ, ਖੇਤੀ, ਕਿਸਾਨ ਸਨਮਾਨ ਨਿਧੀ]
+    conditions:
+      - field: occupation
+        operator: eq
+        value: farmer
+        description: You are a farmer.
+      - field: land_holding_acres
+        operator: gt
+        value: 0
+        description: Your family owns cultivable land in its name.
+      - field: income_tax_payer
+        operator: eq
+        value: false
+        description: No family member paid income tax in the last assessment year.
+      - field: govt_employee_or_professional
+        operator: eq
+        value: false
+        description: >-
+          No family member is a serving or retired government employee (other
+          than Group D / MTS), a registered professional (doctor, engineer,
+          lawyer, chartered accountant), or a pensioner getting Rs 10,000 or
+          more per month.
+
+  - slug: pmay-g
+    name: Pradhan Mantri Awas Yojana - Gramin
+    short_name: PMAY-G
+    name_pa: ਪ੍ਰਧਾਨ ਮੰਤਰੀ ਆਵਾਸ ਯੋਜਨਾ - ਗ੍ਰਾਮੀਣ
+    department: RURAL_DEVELOPMENT
+    level: central
+    description: >-
+      Financial help for houseless rural families, or families living in kutcha
+      or dilapidated houses, to build a pucca house.
+    benefits: >-
+      Rs 1.20 lakh in plain areas (Rs 1.30 lakh in hilly and difficult areas)
+      towards building a pucca house, plus unskilled wage days under MGNREGA.
+    required_documents:
+      - Aadhaar card
+      - Bank account details
+      - MGNREGA job card
+    application_steps:
+      - Beneficiaries are selected from the Awaas+ / SECC lists, verified by the Gram Sabha.
+      - Contact your Gram Panchayat or Block Development Office to check whether your family is on the list.
+      - If selected, the assistance is paid in instalments to your bank account as construction progresses.
+    application_mode: Gram Panchayat / Block office
+    official_url: https://pmayg.nic.in/
+    category_tags: [housing, rural]
+    keywords: [house, housing, home, awas, pmay, ਘਰ, ਮਕਾਨ, ਆਵਾਸ, ਪੱਕਾ ਘਰ]
+    conditions:
+      - field: area
+        operator: eq
+        value: rural
+        description: You live in a rural area (village).
+      - field: owns_pucca_house
+        operator: eq
+        value: false
+        description: Your family does not own a pucca house.
+      - field: in_beneficiary_list
+        operator: eq
+        value: true
+        description: >-
+          Your family is on the Awaas+ / SECC beneficiary list verified by the
+          Gram Sabha.
+
+  - slug: ab-pmjay
+    name: Ayushman Bharat - Pradhan Mantri Jan Arogya Yojana
+    short_name: AB PM-JAY
+    name_pa: ਆਯੁਸ਼ਮਾਨ ਭਾਰਤ - ਪ੍ਰਧਾਨ ਮੰਤਰੀ ਜਨ ਆਰੋਗਿਆ ਯੋਜਨਾ
+    department: HEALTH
+    level: central
+    description: >-
+      Free (cashless) hospital treatment for eligible families at empanelled
+      government and private hospitals.
+    benefits: >-
+      Health cover of up to Rs 5 lakh per family per year for hospital
+      treatment, cashless at empanelled hospitals.
+    required_documents:
+      - Aadhaar card
+      - Ration card
+    application_steps:
+      - Check whether your family is eligible on the beneficiary portal or by calling the helpline.
+      - Get your Ayushman card made at a Common Service Centre or at the Ayushman desk of an empanelled hospital.
+      - Show the card at an empanelled hospital for cashless treatment.
+    application_mode: online check, CSC or hospital
+    official_url: https://beneficiary.nha.gov.in/
+    contact: Ayushman Bharat helpline 14555
+    category_tags: [health, insurance]
+    keywords: [health, hospital, insurance, treatment, ayushman, ਸਿਹਤ, ਹਸਪਤਾਲ, ਇਲਾਜ, ਆਯੁਸ਼ਮਾਨ]
+    conditions:
+      - field: in_beneficiary_list
+        operator: eq
+        value: true
+        group: eligibility
+        description: >-
+          Your family is in the eligible beneficiary list (SECC 2011 or the
+          state's extended list).
+      - field: age
+        operator: gte
+        value: 70
+        group: eligibility
+        description: >-
+          Or: you are aged 70 or above (covered regardless of income).
+
+  - slug: ignoaps
+    name: Indira Gandhi National Old Age Pension Scheme
+    short_name: IGNOAPS
+    name_pa: ਇੰਦਰਾ ਗਾਂਧੀ ਰਾਸ਼ਟਰੀ ਬੁਢਾਪਾ ਪੈਨਸ਼ਨ ਯੋਜਨਾ
+    department: RURAL_DEVELOPMENT
+    level: central
+    description: >-
+      Monthly pension for elderly people from below-poverty-line households,
+      under the National Social Assistance Programme.
+    benefits: >-
+      Central share of Rs 200 per month (age 60-79) and Rs 500 per month (age
+      80 and above). State governments add their own amount, so the total paid
+      depends on your state.
+    required_documents:
+      - Age proof (Aadhaar card or birth certificate)
+      - BPL card or proof of BPL status
+      - Bank account details
+    application_steps:
+      - Apply at your Gram Panchayat (rural) or municipal office (urban), or the district social welfare office.
+      - Submit the application form with age proof, BPL proof and bank details.
+      - After verification, the pension is paid monthly into your bank account.
+    application_mode: Gram Panchayat / municipal / social welfare office
+    official_url: https://nsap.nic.in/
+    category_tags: [pension, elderly]
+    keywords: [pension, old age, elderly, senior, ਪੈਨਸ਼ਨ, ਬੁਢਾਪਾ, ਬਜ਼ੁਰਗ]
+    conditions:
+      - field: age
+        operator: gte
+        value: 60
+        description: You are 60 years of age or older.
+      - field: bpl
+        operator: eq
+        value: true
+        description: Your household is below the poverty line (BPL).
+
+  - slug: pmuy
+    name: Pradhan Mantri Ujjwala Yojana
+    short_name: PMUY
+    name_pa: ਪ੍ਰਧਾਨ ਮੰਤਰੀ ਉੱਜਵਲਾ ਯੋਜਨਾ
+    department: PETROLEUM
+    level: central
+    description: >-
+      Deposit-free LPG cooking gas connection for women from poor households.
+    benefits: >-
+      A deposit-free LPG connection in the name of an adult woman of the
+      household.
+    required_documents:
+      - Aadhaar card
+      - Ration card
+      - Bank account details
+    application_steps:
+      - Apply online on the PMUY portal, or visit your nearest LPG distributor.
+      - Submit the KYC form with Aadhaar, ration card and bank details.
+      - After verification, the distributor releases the connection.
+    application_mode: online or LPG distributor
+    official_url: https://www.pmuy.gov.in/
+    category_tags: [household, women]
+    keywords: [lpg, gas, cylinder, ujjwala, cooking, ਗੈਸ, ਸਿਲੰਡਰ, ਉੱਜਵਲਾ]
+    conditions:
+      - field: gender
+        operator: eq
+        value: female
+        description: The applicant is a woman.
+      - field: age
+        operator: gte
+        value: 18
+        description: The applicant is 18 years or older.
+      - field: household_has_lpg
+        operator: eq
+        value: false
+        description: No one in the household already has an LPG connection.
+      - field: poor_household
+        operator: eq
+        value: true
+        description: >-
+          The household is poor (for example SC/ST, Antyodaya ration card,
+          PMAY-G beneficiary, or another listed category).
+
+  - slug: post-matric-sc
+    name: Post Matric Scholarship for Scheduled Caste Students
+    short_name: PMS-SC
+    name_pa: ਅਨੁਸੂਚਿਤ ਜਾਤੀ ਵਿਦਿਆਰਥੀਆਂ ਲਈ ਪੋਸਟ ਮੈਟ੍ਰਿਕ ਵਜ਼ੀਫ਼ਾ
+    department: SOCIAL_JUSTICE
+    level: central
+    description: >-
+      Scholarship for Scheduled Caste students studying after Class 10,
+      covering fees and a maintenance allowance.
+    benefits: >-
+      Compulsory fees paid and a maintenance allowance for students in Class 11
+      onwards, including college and professional courses.
+    required_documents:
+      - Caste certificate (SC)
+      - Family income certificate
+      - Previous class marksheet
+      - Aadhaar-linked bank account details
+    application_steps:
+      - Apply on your state's scholarship portal or the National Scholarship Portal during the application window.
+      - Upload your caste certificate, income certificate and marksheet.
+      - Your institute verifies the application, then the state approves it.
+    application_mode: online
+    official_url: https://scholarships.gov.in/
+    category_tags: [education, scholarship]
+    keywords: [scholarship, student, college, education, sc, ਵਜ਼ੀਫ਼ਾ, ਵਿਦਿਆਰਥੀ, ਪੜ੍ਹਾਈ]
+    conditions:
+      - field: social_category
+        operator: eq
+        value: sc
+        description: You belong to a Scheduled Caste (SC).
+      - field: income_band
+        operator: in
+        value: [below_1l, 1l_to_2.5l]
+        description: Your family's annual income is Rs 2.5 lakh or less.
+      - field: studying_post_matric
+        operator: eq
+        value: true
+        description: You are studying in Class 11 or above (after Class 10).

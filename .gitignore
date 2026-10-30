@@ -1,0 +1,24 @@
+# Secrets / local env
+.env
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.pip-audit-cache/
+.coverage
+htmlcov/
+
+# Generated RSA keys (Phase 3) — never commit
+config/keys/*.pem
+
+# Celery beat scheduler state (runtime artifact)
+celerybeat-schedule
+celerybeat-schedule.*
+
+# Editor
+.idea/
+.vscode/

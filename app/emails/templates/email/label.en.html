@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block title %}Your account was updated{% endblock %}
+{% block preheader %}A label on your Rare Vintage account changed.{% endblock %}
+{% block content %}
+  {{ ui.heading("Your account was updated") }}
+  {{ ui.paragraph("A label on your Rare Vintage account has changed:") }}
+  <table role="presentation" cellpadding="0" cellspacing="0"
+         style="margin:8px 0 16px; font-size:15px; line-height:24px; color:#3d3d3d;">
+    <tr><td style="padding-right:16px; color:#8a8a82;">Label</td><td>{{ label_key }}</td></tr>
+    <tr><td style="padding-right:16px; color:#8a8a82;">Value</td><td>{{ label_value }}</td></tr>
+  </table>
+  {{ ui.fineprint("If you did not expect this change, please contact us at hello@rarevintage.com.au.") }}
+{% endblock %}
